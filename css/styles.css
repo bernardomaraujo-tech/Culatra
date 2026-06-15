@@ -744,3 +744,133 @@ h1 {
   font-style: normal;
   font-weight: 800;
 }
+
+/* Ajustes 15/06 - carrosséis horários e direção do vento */
+.carousel {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  align-items: stretch;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.carousel-btn {
+  width: 34px;
+  min-width: 34px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.96);
+  color: var(--teal-dark);
+  font-size: 1.35rem;
+  line-height: 1;
+  font-weight: 950;
+  box-shadow: 0 6px 14px rgba(8,55,76,.08);
+  display: grid;
+  place-items: center;
+  touch-action: manipulation;
+}
+
+.carousel-btn:active {
+  transform: scale(.96);
+}
+
+.forecast-strip,
+.wind-strip {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  scroll-snap-type: x proximity;
+  scroll-padding-left: 2px;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+}
+
+.forecast-strip::-webkit-scrollbar,
+.wind-strip::-webkit-scrollbar { display: none; }
+
+.forecast-strip { padding: 2px 1px 8px; }
+.wind-strip { padding: 2px 1px 8px; }
+
+.mini-card,
+.wind-card {
+  flex: 0 0 88px;
+  min-width: 88px;
+  scroll-snap-align: start;
+}
+
+.mini-card--weather small {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-width: 34px;
+}
+
+.mini-card--weather small b {
+  font: inherit;
+}
+
+.wind-card .wind-dir {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 7px;
+  color: var(--teal-dark);
+}
+
+.wind-card .wind-dir b {
+  font: inherit;
+}
+
+.wind-arrow {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  display: inline-grid;
+  place-items: center;
+  background: #e7f5f4;
+  color: var(--teal-dark);
+  font-size: .95rem;
+  line-height: 1;
+  font-style: normal;
+  font-weight: 950;
+  transform: rotate(var(--deg, 0deg));
+  transform-origin: center;
+}
+
+.mini-card--weather .wind-arrow {
+  width: 17px;
+  height: 17px;
+  font-size: .72rem;
+}
+
+.wind-arrow--unknown {
+  transform: none;
+}
+
+@media (max-width: 420px) {
+  .carousel {
+    grid-template-columns: 30px minmax(0, 1fr) 30px;
+    gap: 5px;
+  }
+  .carousel-btn {
+    width: 30px;
+    min-width: 30px;
+    font-size: 1.2rem;
+  }
+  .mini-card,
+  .wind-card {
+    flex-basis: 84px;
+    min-width: 84px;
+  }
+}
