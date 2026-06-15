@@ -69,7 +69,7 @@ window.PESCA_CONFIG = {
       pressure: 1017,
       windSpeed: 18,
       windDirection: 45,
-      windDirectionText: 'Nordeste',
+      windDirectionText: 'NE',
       gusts: 28,
       cloudCover: 18
     },
@@ -77,7 +77,7 @@ window.PESCA_CONFIG = {
       waveHeight: 0.9,
       wavePeriod: 8,
       waveDirection: 225,
-      waveDirectionText: 'Sudoeste',
+      waveDirectionText: 'SO',
       waterTemperature: 20
     },
     daily: {
