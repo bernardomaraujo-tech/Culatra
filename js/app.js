@@ -978,15 +978,15 @@
           <div class="tide-gauge" style="--progress:${Math.round(tide.progress * 100)}%"><span>${tide.phase}</span><strong>${tide.height} m</strong></div>
           <div class="tide-hero__copy">
             <p>Próximo evento</p>
-            <strong>${nextExtreme ? eventName(nextExtreme.type) : '--'} · ${nextExtreme ? formatTime(nextExtreme.time) : '--'}</strong>
+            <strong>${nextExtreme ? eventShortName(nextExtreme.type) : '--'} · ${nextExtreme ? formatTime(nextExtreme.time) : '--'}</strong>
             <span>${nextExtreme ? `${nextExtreme.height} m` : ''}</span>
           </div>
         </div>
         <div class="metrics-grid">
-          ${metric('Último evento', prevExtreme ? `${eventName(prevExtreme.type)} ${formatTime(prevExtreme.time)}` : '--', prevExtreme ? `${prevExtreme.height} m` : '', '')}
-          ${metric('Próximo evento', nextExtreme ? `${eventName(nextExtreme.type)} ${formatTime(nextExtreme.time)}` : '--', nextExtreme ? `${nextExtreme.height} m` : '', '')}
+          ${metric('Último evento', prevExtreme ? `${eventShortName(prevExtreme.type)} ${formatTime(prevExtreme.time)}` : '--', prevExtreme ? `${prevExtreme.height} m` : '', '')}
+          ${metric('Próximo evento', nextExtreme ? `${eventShortName(nextExtreme.type)} ${formatTime(nextExtreme.time)}` : '--', nextExtreme ? `${nextExtreme.height} m` : '', '')}
           ${metric('Amplitude', `${tide.amplitude} m`, `corrente ${tide.strength.toLowerCase()}`, tide.strength === 'Forte' ? 'warn' : 'blue')}
-          ${metric('Fonte maré', data.tide.source, data.tide.source === 'Estimativa local' ? 'validar com IH' : 'ativa', sourceTone)}
+          ${metric('Fonte maré', data.tide.source === 'Estimativa local' ? 'Est. local' : data.tide.source, data.tide.source === 'Estimativa local' ? 'validar com IH' : 'ativa', sourceTone)}
         </div>
       `)}
       ${section('Ondulação e água', 'Dados do mar para a zona selecionada.', `
@@ -999,7 +999,7 @@
         <canvas id="seaChart" class="chart" height="190"></canvas>
       `)}
       ${section('Próximas marés', 'Eventos previstos ou estimados.', `
-        <div class="event-list">${extremes.map(e => `<article><strong>${eventName(e.type)}</strong><span>${formatDateTime(e.time)}</span><em>${e.height} m</em></article>`).join('')}</div>
+        <div class="event-list">${extremes.map(e => `<article><strong>${eventShortName(e.type)}</strong><span>${formatDateTime(e.time)}</span><em>${e.height} m</em></article>`).join('')}</div>
         <div class="decision-list">
           <div><strong>Melhor fase</strong><span>${tide.phase === 'A subir' ? 'Maré a subir. Bom sinal para Ria e Dourada.' : 'Maré a descer. Pode funcionar em canais, pontas e zonas de corrente.'}</span></div>
           <div><strong>Evitar</strong><span>${data.zone.avoidHint}</span></div>
@@ -1009,6 +1009,7 @@
   }
 
   function eventName(type) { return type === 'high' ? 'Preia-mar' : 'Baixa-mar'; }
+  function eventShortName(type) { return type === 'high' ? 'PM' : 'BM'; }
   function waveDecision(zone, cur) {
     if (cur.marine.waveHeight > zone.limits.waveBlock) return 'evitar';
     if (cur.marine.waveHeight > zone.limits.waveWarn) return 'atenção';
@@ -1137,12 +1138,28 @@
     if (seaCanvas) drawLineChart(seaCanvas, upcomingHours(data.hourly, 48), [
       { key: h => h.marine.waveHeight, label: 'Onda' },
       { key: h => h.tide.height, label: 'Maré' }
-    ], { suffix: 'm', min: 0, max: null });
+    ], { suffix: 'm', min: 0, max: null, annotateExtremaSeries: 1 });
 
     const scoreCanvas = $('#scoreChart');
     if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 48), [
       { key: h => h.score.value, label: 'Score' }
     ], { suffix: '', min: 0, max: 100 });
+  }
+
+
+  function findSeriesExtrema(rows, getValue) {
+    const extrema = [];
+    if (!rows || rows.length < 3) return extrema;
+    for (let i = 1; i < rows.length - 1; i++) {
+      const prev = Number(getValue(rows[i - 1]));
+      const curr = Number(getValue(rows[i]));
+      const next = Number(getValue(rows[i + 1]));
+      if (![prev, curr, next].every(Number.isFinite)) continue;
+      const isPeak = curr >= prev && curr >= next && (curr > prev || curr > next);
+      const isTrough = curr <= prev && curr <= next && (curr < prev || curr < next);
+      if (isPeak || isTrough) extrema.push({ index: i, type: isPeak ? 'peak' : 'trough', value: curr, time: rows[i].time });
+    }
+    return extrema;
   }
 
   function drawLineChart(canvas, rows, series, opts = {}) {
@@ -1193,6 +1210,27 @@
       });
       ctx.stroke();
     });
+
+    if (Number.isInteger(opts.annotateExtremaSeries) && series[opts.annotateExtremaSeries]) {
+      const seriesIndex = opts.annotateExtremaSeries;
+      const getter = series[seriesIndex].key;
+      const extrema = findSeriesExtrema(rows, getter);
+      ctx.font = '10px system-ui, sans-serif';
+      extrema.forEach(item => {
+        const x = padL + (w - padL - padR) * item.index / Math.max(1, rows.length - 1);
+        const y = padT + (h - padT - padB) * (1 - ((getter(rows[item.index]) - min) / span));
+        const label = `${item.type === 'peak' ? 'PM' : 'BM'} ${formatTime(item.time)}`;
+        ctx.fillStyle = '#09233f';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = item.type === 'peak' ? 'bottom' : 'top';
+        const offset = item.type === 'peak' ? -8 : 8;
+        ctx.fillText(label, x, y + offset);
+        ctx.beginPath();
+        ctx.fillStyle = colors[seriesIndex % colors.length];
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    }
 
     ctx.fillStyle = '#617587';
     ctx.textAlign = 'center';
