@@ -109,6 +109,28 @@
     return best;
   }
 
+  function startOfCurrentHour() {
+    const now = new Date();
+    now.setMinutes(0, 0, 0);
+    return now.getTime();
+  }
+
+  function upcomingHours(rows, count = 24) {
+    const list = (rows || [])
+      .filter(row => row && row.time)
+      .slice()
+      .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime());
+    const cutoff = startOfCurrentHour();
+    const future = list.filter(row => new Date(row.time).getTime() >= cutoff);
+    return (future.length ? future : list).slice(0, count);
+  }
+
+  function windArrowMarkup(degrees) {
+    const value = Number(degrees);
+    if (!Number.isFinite(value)) return '<i class="wind-arrow wind-arrow--unknown" aria-hidden="true">•</i>';
+    return `<i class="wind-arrow" style="--deg:${value}deg" aria-hidden="true">↑</i>`;
+  }
+
   async function fetchJson(url, options = {}) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 12000);
@@ -543,10 +565,10 @@
   }
 
   function bestWindows(data, minScore = 65, max = 3) {
-    const hours = data.hourly || [];
+    const hours = upcomingHours(data.hourly || [], 48);
     const groups = [];
     let current = [];
-    hours.slice(0, 48).forEach(h => {
+    hours.forEach(h => {
       if (h.score.value >= minScore) current.push(h);
       else if (current.length) { groups.push(current); current = []; }
     });
@@ -565,7 +587,7 @@
   function avoidWindows(data, max = 3) {
     const groups = [];
     let current = [];
-    data.hourly.slice(0, 48).forEach(h => {
+    upcomingHours(data.hourly, 48).forEach(h => {
       const risky = h.score.value < 45 || h.weather.windSpeed > data.zone.limits.windWarn || h.weather.gusts > data.zone.limits.gustWarn || h.marine.waveHeight > data.zone.limits.waveBlock;
       if (risky) current.push(h);
       else if (current.length) { groups.push(current); current = []; }
@@ -708,7 +730,7 @@
     const data = currentData();
     const cur = data.current;
     const zone = data.zone;
-    const next24 = data.hourly.slice(0, 24);
+    const next24 = upcomingHours(data.hourly, 24);
     const avgWind = round(mean(next24.map(h => h.weather.windSpeed)));
     const maxGust = Math.max(...next24.map(h => h.weather.gusts || 0));
     const temps = next24.map(h => h.weather.temperature).filter(Number.isFinite);
@@ -743,11 +765,19 @@
           <span><i class="legend-dot legend-dot--wind"></i>Vento km/h</span>
         </div>
         <canvas id="weatherChart" class="chart" height="190"></canvas>
-        <p class="strip-hint">Desliza para ver hora a hora. Cada cartão mostra temperatura, vento e direção.</p>
-        <div class="forecast-strip">${next24.map(hourMiniWeather).join('')}</div>
+        <p class="strip-hint">Começa na hora atual. Desliza ou usa as setas para ver as próximas horas.</p>
+        <div class="carousel">
+          <button class="carousel-btn" type="button" data-scroll-target="weatherHours" data-scroll-dir="-1" aria-label="Ver horas anteriores">‹</button>
+          <div id="weatherHours" class="forecast-strip" tabindex="0">${next24.map(hourMiniWeather).join('')}</div>
+          <button class="carousel-btn" type="button" data-scroll-target="weatherHours" data-scroll-dir="1" aria-label="Ver próximas horas">›</button>
+        </div>
       `)}
       ${section('Direção do vento', 'A direção do vento ao longo do dia ajuda a perceber conforto, abrigo e exposição da praia.', `
-        <div class="wind-strip">${next24.filter((_, i) => i % 2 === 0).map(hourWindDirection).join('')}</div>
+        <div class="carousel">
+          <button class="carousel-btn" type="button" data-scroll-target="windHours" data-scroll-dir="-1" aria-label="Ver vento anterior">‹</button>
+          <div id="windHours" class="wind-strip" tabindex="0">${next24.filter((_, i) => i % 2 === 0).map(hourWindDirection).join('')}</div>
+          <button class="carousel-btn" type="button" data-scroll-target="windHours" data-scroll-dir="1" aria-label="Ver próximas direções do vento">›</button>
+        </div>
         <div class="decision-list">
           <div><strong>Direção dominante</strong><span>${dominantWind}. Confirma no local porque na ilha pequenas mudanças de direção alteram bastante o conforto.</span></div>
           <div><strong>Vento médio</strong><span>${avgWind} km/h nas próximas 24 h, com rajada máxima prevista de ${maxGust} km/h.</span></div>
@@ -857,12 +887,12 @@
 
   function hourMiniWeather(h) {
     const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
-    return `<article class="mini-card mini-card--weather"><strong>${formatTime(h.time)}</strong><span>${h.weather.temperature} °C</span><em>${h.weather.windSpeed} km/h</em><small>${dir}</small></article>`;
+    return `<article class="mini-card mini-card--weather"><strong>${formatTime(h.time)}</strong><span>${h.weather.temperature} °C</span><em>${h.weather.windSpeed} km/h</em><small>${windArrowMarkup(h.weather.windDirection)}<b>${dir}</b></small></article>`;
   }
 
   function hourWindDirection(h) {
     const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
-    return `<article class="wind-card"><strong>${formatTime(h.time)}</strong><span>${dir}</span><em>${h.weather.windSpeed} km/h</em></article>`;
+    return `<article class="wind-card"><strong>${formatTime(h.time)}</strong><span class="wind-dir">${windArrowMarkup(h.weather.windDirection)}<b>${dir}</b></span><em>${h.weather.windSpeed} km/h</em></article>`;
   }
 
   function renderMares() {
@@ -1030,19 +1060,19 @@
     const data = currentData();
     if (!data) return;
     const weatherCanvas = $('#weatherChart');
-    if (weatherCanvas) drawLineChart(weatherCanvas, data.hourly.slice(0, 24), [
+    if (weatherCanvas) drawLineChart(weatherCanvas, upcomingHours(data.hourly, 24), [
       { key: h => h.weather.temperature, label: 'Temp' },
       { key: h => h.weather.windSpeed, label: 'Vento' }
     ], { suffix: '', min: null, max: null });
 
     const seaCanvas = $('#seaChart');
-    if (seaCanvas) drawLineChart(seaCanvas, data.hourly.slice(0, 48), [
+    if (seaCanvas) drawLineChart(seaCanvas, upcomingHours(data.hourly, 48), [
       { key: h => h.marine.waveHeight, label: 'Onda' },
       { key: h => h.tide.height, label: 'Maré' }
     ], { suffix: 'm', min: 0, max: null });
 
     const scoreCanvas = $('#scoreChart');
-    if (scoreCanvas) drawLineChart(scoreCanvas, data.hourly.slice(0, 48), [
+    if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 48), [
       { key: h => h.score.value, label: 'Score' }
     ], { suffix: '', min: 0, max: 100 });
   }
@@ -1134,6 +1164,16 @@
         localStorage.setItem('pesca.tab', state.tab);
         render();
       });
+    });
+
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-scroll-target]');
+      if (!button) return;
+      const target = document.getElementById(button.dataset.scrollTarget);
+      if (!target) return;
+      const direction = Number(button.dataset.scrollDir || 1);
+      const amount = Math.max(180, Math.round(target.clientWidth * 0.85));
+      target.scrollBy({ left: direction * amount, behavior: 'smooth' });
     });
 
     els.settingsBtn.addEventListener('click', () => {
