@@ -830,6 +830,8 @@ h1 {
 
 .wind-card .wind-dir b {
   font: inherit;
+  line-height: 1.05;
+  max-width: 68px;
 }
 
 .wind-arrow {
@@ -873,4 +875,30 @@ h1 {
     flex-basis: 84px;
     min-width: 84px;
   }
+}
+
+/* Ajuste 15/06 - direção do vento em português */
+.forecast-strip .mini-card,
+.wind-strip .wind-card {
+  flex-basis: 108px;
+  min-width: 108px;
+}
+
+.mini-card--weather small,
+.wind-card .wind-dir {
+  width: 100%;
+  min-width: 0;
+}
+
+.mini-card--weather small b,
+.wind-card .wind-dir b {
+  display: inline-block;
+  max-width: 72px;
+  line-height: 1.05;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.wind-arrow {
+  flex: 0 0 auto;
 }
