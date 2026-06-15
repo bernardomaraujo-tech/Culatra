@@ -338,6 +338,69 @@ h1 {
 .metric--blue { background: #edf6ff; border-color: #cfe4f7; }
 .metric--bad { background: #fff0f0; border-color: #ffc9c9; }
 
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  margin-top: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+.meteo-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: .79rem;
+}
+.meteo-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f5fafb;
+  color: var(--muted);
+  text-align: left;
+  padding: 10px 10px 8px;
+  border-bottom: 1px solid var(--line);
+  font-size: .75rem;
+  font-weight: 950;
+  white-space: nowrap;
+}
+.meteo-table thead th small {
+  display: block;
+  margin-top: 2px;
+  font-size: .68rem;
+  font-weight: 850;
+}
+.meteo-table tbody td {
+  padding: 10px;
+  border-bottom: 1px solid #e9f1f4;
+  vertical-align: middle;
+  font-weight: 820;
+  white-space: nowrap;
+}
+.meteo-table tbody tr:last-child td { border-bottom: 0; }
+.meteo-table tbody tr:nth-child(even) td { background: #fbfdfd; }
+.dir-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.dir-badge b {
+  font-size: .76rem;
+}
+.sky-cell {
+  text-align: center;
+  font-size: 1rem;
+}
+.table-note {
+  margin: 8px 2px 0;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.35;
+  font-weight: 760;
+}
+
 .chart {
   display: block;
   width: 100%;
