@@ -1,469 +1,187 @@
-:root {
-  --bg: #eef7f7;
-  --surface: #ffffff;
-  --ink: #08213f;
-  --muted: #607486;
-  --line: #dbe8ec;
-  --teal: #14958f;
-  --teal-dark: #0b5f73;
-  --blue: #2f6eaa;
-  --green: #32a873;
-  --orange: #f28421;
-  --red: #d94a4a;
-  --sand: #f5e7cf;
-  --shadow: 0 18px 44px rgba(8, 33, 63, .12);
-  --radius-xl: 28px;
-  --radius-lg: 20px;
-  --radius-md: 16px;
-  --radius-sm: 12px;
-  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
+Visual Studio Code 1.124
 
-* { box-sizing: border-box; }
-html { min-height: 100%; background: var(--bg); }
-body {
-  margin: 0;
-  min-height: 100%;
-  font-family: var(--font);
-  color: var(--ink);
-  background:
-    radial-gradient(circle at 20% 0%, rgba(20, 149, 143, .18), transparent 20rem),
-    radial-gradient(circle at 90% 10%, rgba(47, 110, 170, .12), transparent 18rem),
-    linear-gradient(180deg, #fbfefe 0%, var(--bg) 55%, #f7ead6 100%);
-}
+Show release notes after an update
 
-button, input, select { font: inherit; }
-button { cursor: pointer; }
+Follow us on LinkedIn, X, Bluesky | View online
 
-.app-shell {
-  width: min(100%, 460px);
-  min-height: 100vh;
-  margin: 0 auto;
-  padding: max(14px, env(safe-area-inset-top)) 14px max(90px, env(safe-area-inset-bottom));
-}
+Release date: June 10, 2026
 
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand__icon { width: 50px; height: 50px; border-radius: 15px; box-shadow: 0 10px 22px rgba(11, 95, 115, .2); }
-.eyebrow { margin: 0 0 2px; color: var(--teal-dark); font-size: .72rem; font-weight: 950; text-transform: uppercase; letter-spacing: .08em; }
-h1 { margin: 0; font-size: 1.72rem; line-height: .95; letter-spacing: -.06em; }
-.icon-btn {
-  border: 1px solid var(--line);
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, .9);
-  color: var(--teal-dark);
-  font-weight: 950;
-  display: inline-grid;
-  place-items: center;
-}
+Update 1.124.1: The update addresses these issues.
 
-.live-strip {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  overflow: auto;
-  scrollbar-width: none;
-  margin-bottom: 12px;
-}
-.live-strip::-webkit-scrollbar { display: none; }
-.live-strip__text {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: .75rem;
-  font-weight: 800;
-  background: rgba(255,255,255,.65);
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 8px 10px;
-}
-.status {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 8px 10px;
-  font-size: .75rem;
-  font-weight: 950;
-  border: 1px solid var(--line);
-}
-.status--loading { color: var(--teal-dark); background: #e7f5f4; }
-.status--ok { color: #156f4a; background: #eaf8f1; border-color: #c7ead8; }
-.status--warn { color: #a85b17; background: #fff4e9; border-color: #ffd6b8; }
-.status--error { color: #a63232; background: #fff0f0; border-color: #ffcaca; }
+Update 1.124.2: The update addresses these issues.
 
-.hero-card, .panel {
-  border: 1px solid rgba(219, 232, 236, .95);
-  border-radius: var(--radius-xl);
-  background: rgba(255,255,255,.86);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 12px 30px rgba(8, 33, 63, .07);
-}
-.hero-card { padding: 12px; margin-bottom: 12px; }
-.map-wrap {
-  position: relative;
-  overflow: hidden;
-  border-radius: 22px;
-  background: #dff4f4;
-  border: 1px solid var(--line);
-  height: 248px;
-  margin-bottom: 10px;
-}
-.map-wrap img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.map-pin {
-  position: absolute;
-  border: 2px solid white;
-  border-radius: 999px;
-  color: white;
-  font-weight: 950;
-  font-size: .76rem;
-  padding: 7px 10px;
-  box-shadow: 0 8px 18px rgba(8, 33, 63, .18);
-  transition: transform .18s ease, filter .18s ease;
-}
-.map-pin.is-active { transform: scale(1.08); filter: saturate(1.2); }
-.map-pin--sul { left: 18%; top: 34%; background: var(--green); }
-.map-pin--norte { right: 13%; top: 32%; background: var(--blue); }
-.map-pin--ponta { left: 58%; bottom: 9%; background: var(--orange); }
+Welcome to the 1.124 release of Visual Studio Code. This release makes it faster to work across agent sessions and gives agents more autonomy to finish your tasks.
 
-.zone-selector {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 7px;
-  margin-bottom: 10px;
-}
-.zone-chip {
-  border: 1px solid var(--line);
-  background: #fff;
-  color: var(--muted);
-  border-radius: 999px;
-  padding: 9px 8px;
-  font-size: .75rem;
-  font-weight: 950;
-  min-width: 0;
-}
-.zone-chip.is-active { background: var(--teal-dark); color: #fff; border-color: var(--teal-dark); }
+Autopilot: Autopilot, enabled by default, is now smarter to determine when a task is truly done.
 
-.summary-grid { display: grid; grid-template-columns: 1fr 1.35fr; gap: 8px; }
-.summary-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 12px;
-  min-height: 92px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  justify-content: center;
-}
-.summary-card span { color: var(--muted); font-size: .74rem; font-weight: 850; }
-.summary-card strong { font-size: 1.14rem; line-height: 1; letter-spacing: -.03em; }
-.summary-card--score strong { font-size: 2rem; color: var(--orange); }
-.summary-card em { color: var(--muted); font-size: .73rem; font-weight: 800; font-style: normal; line-height: 1.3; }
+Background sessions: Quickly send a request in the background and keep composing the next session.
 
-.tabs {
-  position: sticky;
-  top: 0;
-  z-index: 5;
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
-  padding: 6px;
-  margin-bottom: 12px;
-  border-radius: 18px;
-  background: rgba(237, 247, 248, .94);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(219, 232, 236, .9);
-}
-.tab {
-  border: 0;
-  border-radius: 13px;
-  padding: 11px 4px;
-  background: transparent;
-  color: var(--muted);
-  font-size: .74rem;
-  font-weight: 950;
-}
-.tab.is-active { background: var(--teal); color: #fff; box-shadow: 0 8px 18px rgba(20, 149, 143, .22); }
+Session navigation: Search, jump, and step through agent sessions with the keyboard.
 
-.content { display: grid; gap: 12px; }
-.panel { padding: 14px; }
-.panel__header { display: flex; justify-content: space-between; gap: 10px; margin-bottom: 12px; }
-.panel__header h2 { margin: 0; font-size: 1.08rem; letter-spacing: -.04em; }
-.panel__header p { margin: 5px 0 0; color: var(--muted); font-size: .78rem; line-height: 1.35; font-weight: 720; }
-.metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-.metric {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 12px;
-  min-height: 88px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 5px;
-}
-.metric span { color: var(--muted); font-size: .72rem; font-weight: 850; }
-.metric strong { font-size: 1.22rem; letter-spacing: -.04em; line-height: 1.05; }
-.metric em { color: var(--muted); font-size: .72rem; line-height: 1.25; font-style: normal; font-weight: 780; }
-.metric--good { background: #ebf8f1; border-color: #c9ead8; }
-.metric--warn { background: #fff4e9; border-color: #ffd3ad; }
-.metric--blue { background: #edf6fc; border-color: #cde3f6; }
+Browser history: Revisit and search pages you've already opened in the integrated browser.
 
-.chart {
-  width: 100%;
-  display: block;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-}
-.forecast-strip {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-  overflow-x: auto;
-  padding-bottom: 2px;
-  scrollbar-width: none;
-}
-.forecast-strip::-webkit-scrollbar { display: none; }
-.mini-card {
-  flex: 0 0 82px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: #fff;
-  padding: 10px;
-  display: grid;
-  gap: 4px;
-  text-align: center;
-}
-.mini-card strong { font-size: .78rem; }
-.mini-card span { font-size: .88rem; font-weight: 950; }
-.mini-card em { color: var(--muted); font-size: .7rem; font-style: normal; font-weight: 800; }
+Happy Coding!
 
-.decision-list { display: grid; gap: 8px; }
-.decision-list > div {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 12px;
-  display: grid;
-  gap: 5px;
-}
-.decision-list strong { font-size: .82rem; }
-.decision-list span { color: var(--muted); font-size: .78rem; font-weight: 740; line-height: 1.38; }
+VS Code is rolling out gradually to all users. Use Check for Updates in VS Code to get the latest version immediately.
 
-.tide-hero {
-  display: grid;
-  grid-template-columns: 120px 1fr;
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.tide-gauge {
-  width: 118px;
-  height: 118px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center, #fff 0 53%, transparent 54%),
-    conic-gradient(var(--teal) var(--progress), #e3eef2 0);
-  display: grid;
-  place-items: center;
-  text-align: center;
-  box-shadow: inset 0 0 0 1px var(--line);
-}
-.tide-gauge span, .tide-gauge strong { grid-column: 1; grid-row: 1; }
-.tide-gauge span { transform: translateY(-12px); color: var(--muted); font-size: .68rem; font-weight: 900; }
-.tide-gauge strong { transform: translateY(11px); font-size: 1.15rem; }
-.tide-hero__copy { display: grid; gap: 5px; }
-.tide-hero__copy p { margin: 0; color: var(--muted); font-size: .76rem; font-weight: 850; }
-.tide-hero__copy strong { font-size: 1.1rem; }
-.tide-hero__copy span { color: var(--muted); font-size: .8rem; font-weight: 780; }
+To try new features as soon as possible, download the nightly Insiders build, which includes the latest updates as soon as they are available.
 
-.event-list { display: grid; gap: 8px; }
-.event-list article {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 12px;
-  display: grid;
-  gap: 4px;
-}
-.event-list--accent article { background: #ecf9f2; border-color: #c6ead7; }
-.event-list--danger article { background: #fff2f2; border-color: #ffcaca; }
-.event-list strong { font-size: .88rem; }
-.event-list span { color: var(--muted); font-size: .78rem; font-weight: 800; }
-.event-list em { color: var(--muted); font-size: .75rem; font-style: normal; font-weight: 740; }
-.empty { margin: 0; color: var(--muted); font-size: .82rem; font-weight: 750; }
+In this update
+Agents Window
+Autopilot
+Editor Experience
+Enterprise
+Deprecated features and settings
+Thank you
+Agents window (Preview)
+The Agents window is a dedicated companion window optimized for exploring, iterating on, and reviewing agent sessions across projects and machines. This release focuses on making it faster to move between sessions and on preserving your context across reloads.
 
-.moon-card {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: #fff;
-  padding: 14px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-bottom: 10px;
-}
-.moon-visual {
-  width: 78px;
-  height: 78px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 68% 45%, #edf7fa 0 32%, #cddce5 33% 48%, transparent 50%),
-    radial-gradient(circle, #071d38 0 64%, #0c3865 65% 100%);
-  box-shadow: inset -8px 0 18px rgba(255,255,255,.16), 0 10px 24px rgba(8, 33, 63, .16);
-}
-.moon-card p { margin: 0; color: var(--muted); font-size: .76rem; font-weight: 850; }
-.moon-card strong { display: block; margin: 3px 0; font-size: 1.18rem; }
-.moon-card span { color: var(--muted); font-size: .78rem; font-weight: 750; line-height: 1.35; }
+Background send for new sessions
+Previously, starting a new session meant waiting for it to load before you could compose the next one. You can now send a request in the background instead: press Alt+Enter (or hold Alt and select Send) in the new session view.
 
-.score-hero {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  background: linear-gradient(135deg, #fff, #edf7f7);
-  padding: 14px;
-  display: grid;
-  grid-template-columns: 112px 1fr;
-  gap: 14px;
-  align-items: center;
-  margin-bottom: 10px;
-}
-.score-ring {
-  width: 108px;
-  height: 108px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at center, #fff 0 54%, transparent 55%),
-    conic-gradient(var(--orange) calc(var(--score) * 1%), #e3eef2 0);
-  display: grid;
-  place-items: center;
-  text-align: center;
-}
-.score-ring strong, .score-ring span { grid-column: 1; grid-row: 1; }
-.score-ring strong { font-size: 2.1rem; transform: translateY(-5px); color: var(--orange); }
-.score-ring span { color: var(--muted); font-weight: 850; font-size: .78rem; transform: translateY(20px); }
-.score-hero--green .score-ring { background: radial-gradient(circle at center, #fff 0 54%, transparent 55%), conic-gradient(var(--green) calc(var(--score) * 1%), #e3eef2 0); }
-.score-hero--blue .score-ring { background: radial-gradient(circle at center, #fff 0 54%, transparent 55%), conic-gradient(var(--blue) calc(var(--score) * 1%), #e3eef2 0); }
-.score-hero__copy { display: grid; gap: 6px; }
-.score-hero__copy p { margin: 0; color: var(--muted); font-weight: 900; font-size: .78rem; }
-.score-hero__copy strong { font-size: 1.05rem; line-height: 1.2; }
-.score-hero__copy span { color: var(--muted); font-size: .8rem; font-weight: 760; line-height: 1.35; }
+The view resets immediately and keeps its state, such as the selected model and context, clearing only the query text, so you can keep queuing up requests. Each started session appears in the sessions list once it commits.
 
-.species-list { display: grid; gap: 8px; }
-.species-list article {
-  display: grid;
-  grid-template-columns: 1fr 96px 38px;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 11px;
-}
-.species-list strong { display: block; font-size: .88rem; }
-.species-list span { color: var(--muted); font-size: .72rem; font-weight: 760; }
-.species-list em { color: var(--muted); font-size: .72rem; font-style: normal; font-weight: 850; text-align: right; }
-meter { width: 100%; height: 10px; }
-meter::-webkit-meter-bar { background: #e7eef2; border: 0; border-radius: 999px; }
-meter::-webkit-meter-optimum-value { background: var(--teal); border-radius: 999px; }
+Sending a prompt with Enter still navigates into the new session as before.
 
-.factor-list { display: grid; gap: 8px; margin-bottom: 10px; }
-.factor-list article {
-  display: grid;
-  grid-template-columns: 92px 1fr 44px;
-  align-items: center;
-  gap: 10px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: #fff;
-  padding: 11px;
-}
-.factor-list strong { display: block; font-size: .8rem; }
-.factor-list span { color: var(--muted); font-size: .68rem; font-weight: 760; }
-.factor-list em { color: var(--muted); text-align: right; font-style: normal; font-size: .72rem; font-weight: 850; }
-.bar { height: 9px; border-radius: 999px; background: #e8eff2; overflow: hidden; }
-.bar i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--teal), var(--blue)); }
+Navigate between sessions
+When you work across many agent sessions, being able to find and switch between them quickly matters. This release adds several keyboard-driven ways to move through your sessions, from a searchable picker to back and forward navigation and direct jumps by position.
 
-.app-footer {
-  position: fixed;
-  left: 50%;
-  bottom: max(12px, env(safe-area-inset-bottom));
-  transform: translateX(-50%);
-  width: min(calc(100% - 28px), 432px);
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  z-index: 10;
-}
-.footer-btn, .primary-btn, .secondary-btn {
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 12px 14px;
-  font-weight: 950;
-  font-size: .82rem;
-}
-.footer-btn { background: rgba(255,255,255,.94); color: var(--teal-dark); box-shadow: 0 10px 30px rgba(8, 33, 63, .1); }
-.primary-btn { background: var(--teal-dark); color: #fff; border-color: var(--teal-dark); }
-.secondary-btn { background: #fff; color: var(--muted); }
+Sessions picker: Press Ctrl+R (Windows+R on macOS) to open a Quick Pick that lists your sessions in two groups, recently opened and other sessions, with the active session pre-selected. Search across both the session title and its folder, then:
 
-.modal {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  width: min(calc(100% - 28px), 420px);
-}
-.modal::backdrop { background: rgba(8, 33, 63, .38); backdrop-filter: blur(4px); }
-.modal__box {
-  border: 1px solid var(--line);
-  border-radius: var(--radius-xl);
-  background: #fff;
-  box-shadow: var(--shadow);
-  padding: 16px;
-  display: grid;
-  gap: 12px;
-}
-.modal__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-.modal__header h2 { margin: 0; font-size: 1.2rem; letter-spacing: -.03em; }
-.muted { margin: 0; color: var(--muted); font-size: .82rem; line-height: 1.45; font-weight: 720; }
-.field { display: grid; gap: 6px; }
-.field span { color: var(--muted); font-size: .78rem; font-weight: 850; }
-.field input, .field select {
-  width: 100%;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  background: #f9fcfc;
-  padding: 12px;
-  color: var(--ink);
-  font-weight: 800;
-}
-.field-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.modal__actions { display: flex; justify-content: flex-end; gap: 8px; }
+Press Enter to open the selected session.
+Press unknown to open it to the side.
+Press RightArrow unknown to open it in the background while keeping the picker open.
+Screenshot showing the sessions picker Quick Pick with sessions grouped into recently opened and other sessions.
 
-@media (min-width: 760px) {
-  .app-shell {
-    margin-top: 24px;
-    margin-bottom: 24px;
-    min-height: auto;
-    border: 10px solid #101820;
-    border-radius: 44px;
-    box-shadow: var(--shadow);
-    background: linear-gradient(180deg, #fbfefe, #eff8f8);
-    padding: 22px 16px 94px;
-    position: relative;
-  }
-  .app-footer { position: sticky; transform: none; left: auto; bottom: 0; width: 100%; margin-top: 12px; }
-}
+Go back and forward: Press Ctrl+Tab to go back and Ctrl+Shift+Tab to go forward through the sessions you have visited, in most-recently-visited order.
 
-@media (max-width: 370px) {
-  .metrics-grid, .summary-grid, .field-grid { grid-template-columns: 1fr; }
-  .map-wrap { height: 220px; }
-  .tabs { gap: 4px; }
-  .tab { font-size: .68rem; }
-}
+Previous and Next session: The Go to Previous Session and Go to Next Session commands step through the visible sessions list in display order, respecting grouping, filtering, and collapsed sections, and clamp at the list edges. Use Alt+UpArrow / Alt+DownArrow (or Ctrl+PageUp / Ctrl+PageDown; Alt+Windows+LeftArrow / Alt+Windows+RightArrow on macOS).
+
+
+Focus a session by position: Press Ctrl+1 through Ctrl+9 (Windows+1 to Windows+9 on macOS) to focus the Nth visible session in the grid, left to right.
+
+
+Restore sessions on reload
+Reloading or reopening the Agents window no longer loses your layout. The previously visible sessions and their state are restored automatically, so you land back where you left off. This includes:
+
+The visible sessions grid: which sessions were open, their left-to-right order, the active session, and any sticky or pinned sessions.
+Per-session layout, including auxiliary bar visibility, the active view container, and the editors open in each session.
+Sessions list state, including the pinned and read status of each session.
+Close all sessions
+Similar to editor's Close All... commands, you can now close all your sessions in one step with the new Close All Sessions command. This is especially useful when you have many sessions open and want to quickly switch to a new session without having to close each session individually.
+
+Use the keyboard shortcut Ctrl+K Ctrl+W (Windows+K Windows+W on macOS) while a session has focus, or access the command from the Command Palette.
+
+Single-file diff in the Changes view (Preview)
+Setting: sessions.changes.openSingleFileDiff
+
+By default, selecting a file in the Changes view opens the multi-file diff editor. To open only the changes for that file, you had to press Alt and select the file (Open Changes).
+
+To always open a focused single-file diff editor when you select a file in the Changes view, enable sessions.changes.openSingleFileDiff. This lets you concentrate on one change at a time without the distraction of other files in the multi-file diff. When the setting is enabled, the redundant Open Changes inline action is hidden.
+
+Widen the editor with the side bar chevron
+When you open a file inside the Agents window, a chevron toggle now appears in the editor title bar, to the right of the tabs. Select it to collapse the secondary side bar (auxiliary bar) and widen the editor, and select it again to bring the side bar back. The chevron direction reflects the current side bar visibility.
+
+
+Autopilot (Preview)
+Autopilot is one of the chat permission levels that allows agents to take initiative and act autonomously, without needing explicit user approval for each action.
+
+Autopilot is enabled by default
+Settings:   chat.permissions.default ,   chat.tools.global.autoApprove
+
+Autopilot is now enabled by default in VS Code. Organizations can still control the visibility and usage of Autopilot via the   chat.tools.global.autoApprove setting.
+
+You can configure your default permission level for new chats with   chat.permissions.default . Change the current permission level at any time in the chat input box.
+
+Advanced Autopilot
+Setting:   chat.autopilot.advanced.enabled
+
+Knowing when an agent has truly finished a task is hard. Stop too early and the work is incomplete, loop too long and you waste time and tokens. Advanced Autopilot changes how Autopilot (Preview) decides when to keep iterating and when to finish, so you get more complete results without manually monitoring the loop.
+
+Instead of relying on fixed rules, a small utility model reads a transcript of the chat and decides whether the task is done. The objective that Autopilot works towards is surfaced in a tooltip above the chat, so you can always see what it is trying to accomplish. To keep things bounded, Autopilot loops a maximum of three times before it stops.
+
+Set   chat.autopilot.advanced.enabled to true to try this out.
+
+Editor Experience
+Create folder when opening folder from simple file dialog
+When you are opening a folder from the simple file dialog (  files.simpleDialog.enable ), you can now create a new folder directly from the dialog by typing the name of the folder you want to create and pressing Enter or selecting OK.
+
+Integrated Browser
+History
+Setting:   workbench.browser.maxHistoryEntries
+
+The integrated browser now retains the history of visited pages. History items are surfaced as suggestions when typing in the URL bar, and can be managed using Ctrl+H from within a browser tab. The maximum number of history items to remember can be adjusted via   workbench.browser.maxHistoryEntries .
+
+Screenshot showing the URL bar in the integrated browser, with an input of "Wiki" showing several Wikipedia pages from history.
+
+Improved toolbar customizability
+Previously, Add Element to Chat and Toggle Developer Tools were the only actions that could be made persistently visible in the right side of the browser toolbar.
+
+Now, all actions that appear within the overflow menu can also be surfaced persistently by right-clicking on the toolbar area to the right of the URL input:
+
+Screenshot showing the context menu allowing the user to toggle visible menu items.
+
+Faster agentic text entry
+Previously, typing text and pressing Enter required two separate tool calls. Now, the typeInPage tool supports a submit parameter to allow agents to type text and press Enter in one tool call.
+
+This reduces round-trips for common text-entry scenarios.
+
+Screenshot showing a tool call where the agent typed text into a page and pressed enter.
+
+Enterprise
+Enterprise-managed Copilot plugin policies (Experimental)
+VS Code now reads policy from the same configuration file that already drives enterprise plugin standards for Copilot CLI, so a single policy definition applies to both clients. In the future, VS Code and the CLI will align further on policy management from this shared source.
+
+Enterprise admins can now centrally control which chat plugins and plugin marketplaces are available to developers, instead of asking each developer to configure them locally.
+
+Introduced in 1.123, three new policy-backed settings can be configured through the Copilot enterprise settings file or via existing MDM solutions:
+
+  chat.plugins.enabledPlugins : an allowlist of plugin IDs that the organization explicitly enables or disables.
+chat.plugins.extraMarketplaces: additional plugin marketplaces the organization wants to make available.
+  chat.plugins.strictMarketplaces : when enabled, only marketplaces supplied by policy are trusted.
+Plugins that are blocked by policy remain visible but appear disabled. Marketplaces that are managed by policy are tagged as such in the marketplace picker.
+
+Deprecated features and settings
+None
+
+Thank you
+Contributions to our issue tracking:
+
+@gjsjohnmurray (John Murray)
+@RedCMD (RedCMD)
+@IllusionMH (Andrii Dieiev)
+@albertosantini (Alberto Santini)
+Contributions to vscode:
+
+@1Burhanuddin (Burhanuddin Mundrawala): fix: correct typo occured -> occurred in parcelWatcher.ts comment PR #319721
+@ajasad25 (Asad Meeran): Fix issue reporter "Preview on GitHub" opening repo root instead of the new-issue form PR #319577
+@gjsjohnmurray (John Murray)
+Improve messages about restart / reload after extension update (fix #297278) PR #307353
+Reinstate symbol icon colors in quickpicks (fix #299650) PR #299753
+@guomaggie: Switch from Copilot Proxy to CAPI PR #318443
+@ishaq2321 (Muhammad Ishaq Khan)
+debug: Log errors when loading stored breakpoints/watch expressions (#319805) PR #319806
+editor: Cache getComputedStyle result in shadowCaretRangeFromPoint (#319803) PR #319804
+@KirtiRamchandani (Kirtikumar Anandrao Ramchandani): fix: surface missing Git LFS git errors PR #319973
+@maruthang (Maruthan G): fix(explorer): guard file-explorer scroll handler against transient tree-map desync (#188365) PR #310833
+@mohanrajvenkatesan23-04 (Mohanraj Venkatesan): html-language-features: include JSDoc summary and tags in <script> hover PR #312585
+@mohityadav8 (Mohit Yadav): fix(docs): correct grammar and typo issues in documentation PR #317718
+@mutl3y: fix(terminal): catch ENOPRO in getCwdResource when file:// provider absent in VS Code web PR #317780
+@sgoedecke (Sean Goedecke): Fix auto mode fallback for empty model providers PR #316174
+@SimonSiefke (Simon Siefke)
+fix: process leaks in extensionHostConnection PR #319223
+fix: memory leak in pane composite bar PR #282589
+fix: memory leak in pty host service PR #287025
+@tbogoodnews (Taylor Blair): Fix BYOK response success turn telemetry PR #319637
+@vivekjm (Vivek JM): Disable Copy Breadcrumbs Path without symbols PR #318042
+@yogeshwaran-c (Yogeshwaran C): Remove disabled toggle from the tab order PR #319693
+Contributions to vscode-extension-samples:
+
+@fhwvtqdc2q-svg (Lloouujjiinn): Replace deprecated typescript.tsc.autoDetect setting PR #1287
+Contributions to vscode-pull-request-github:
+
+@Malix-Labs (Malix - Alix Brunet): feat: contributes.yamlValidation PR #8761
+We really appreciate people trying our new features as soon as they are ready, so check back here often and learn what's new.
+
+If you'd like to read release notes for previous VS Code versions, go to Updates on code.visualstudio.com.
+
