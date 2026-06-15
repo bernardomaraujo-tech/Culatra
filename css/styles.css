@@ -982,3 +982,12 @@ h1 {
 .wind-arrow {
   flex: 0 0 auto;
 }
+
+
+.tide-hero__copy strong,
+.metric strong {
+  word-break: keep-all;
+}
+.event-list article strong {
+  white-space: nowrap;
+}
