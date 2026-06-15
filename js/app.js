@@ -772,13 +772,13 @@
             <thead>
               <tr>
                 <th>Hora</th>
-                <th>Onda</th>
-                <th>Dir.<small>ondas</small></th>
-                <th>Período</th>
+                <th>Céu</th>
+                <th>Temp.</th>
                 <th>Vento</th>
                 <th>Dir.<small>vento</small></th>
-                <th>Temp.</th>
-                <th>Céu</th>
+                <th>Onda</th>
+                <th>Dir.<small>ondas</small></th>
+                <th>Período<small>vaga</small></th>
               </tr>
             </thead>
             <tbody>
@@ -953,13 +953,13 @@
     const windDir = h.weather.windDirectionText || dirText(h.weather.windDirection);
     return `<tr>
       <td><strong>${formatTime(h.time)}</strong></td>
+      <td class="sky-cell">${weatherSkyIcon(h)}</td>
+      <td>${h.weather.temperature ?? '--'} °C</td>
+      <td>${h.weather.windSpeed ?? '--'} km/h</td>
+      <td><span class="dir-badge">${windArrowMarkup(h.weather.windDirection)}<b>${windDir}</b></span></td>
       <td>${h.marine.waveHeight ?? '--'} m</td>
       <td><span class="dir-badge">${directionArrowMarkup(h.marine.waveDirection, 'Ondulação')}<b>${waveDir}</b></span></td>
       <td>${h.marine.wavePeriod ?? '--'} s</td>
-      <td>${h.weather.windSpeed ?? '--'} km/h</td>
-      <td><span class="dir-badge">${windArrowMarkup(h.weather.windDirection)}<b>${windDir}</b></span></td>
-      <td>${h.weather.temperature ?? '--'} °C</td>
-      <td class="sky-cell">${weatherSkyIcon(h)}</td>
     </tr>`;
   }
 
