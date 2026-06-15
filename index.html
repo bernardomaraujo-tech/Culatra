@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b5f73" />
+  <meta name="description" content="Previsão interativa para meteorologia, marés, lua e pesca na Ilha da Culatra." />
+  <title>Pesca Culatra</title>
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/icon.svg" alt="" class="brand__icon" />
+        <div>
+          <p class="eyebrow">Ilha da Culatra</p>
+          <h1>Pesca Culatra</h1>
+        </div>
+      </div>
+      <button id="refreshBtn" class="icon-btn" type="button" aria-label="Atualizar agora">↻</button>
+    </header>
+
+    <section class="live-strip" aria-label="Estado da atualização">
+      <span id="liveStatus" class="status status--loading">A iniciar</span>
+      <span id="lastUpdated" class="live-strip__text">Sem atualização</span>
+      <span id="nextUpdate" class="live-strip__text">Auto: --</span>
+    </section>
+
+    <section class="hero-card">
+      <div class="map-wrap">
+        <img src="assets/culatra-map.png" alt="Mapa da Ilha da Culatra com Sul, Norte e Ponta" />
+        <button class="map-pin map-pin--sul" data-zone="ria" type="button">Sul</button>
+        <button class="map-pin map-pin--norte" data-zone="atlantico" type="button">Norte</button>
+        <button class="map-pin map-pin--ponta" data-zone="ponta" type="button">Ponta</button>
+      </div>
+      <div class="zone-selector" role="radiogroup" aria-label="Selecionar zona">
+        <button class="zone-chip" data-zone="ria" type="button">Sul / Ria</button>
+        <button class="zone-chip" data-zone="atlantico" type="button">Norte / Atlântico</button>
+        <button class="zone-chip is-active" data-zone="ponta" type="button">Ponta</button>
+      </div>
+      <div class="summary-grid">
+        <article class="summary-card summary-card--score">
+          <span>Score pesca</span>
+          <strong id="summaryScore">--</strong>
+          <em id="summaryStatus">A calcular</em>
+        </article>
+        <article class="summary-card">
+          <span>Melhor janela</span>
+          <strong id="summaryBest">--</strong>
+          <em id="summaryReason">--</em>
+        </article>
+      </div>
+    </section>
+
+    <nav class="tabs" aria-label="Separadores principais">
+      <button class="tab is-active" data-tab="meteorologia" type="button">Meteorologia</button>
+      <button class="tab" data-tab="mares" type="button">Marés</button>
+      <button class="tab" data-tab="lua" type="button">Lua</button>
+      <button class="tab" data-tab="pesca" type="button">Pesca</button>
+    </nav>
+
+    <main id="content" class="content" aria-live="polite"></main>
+
+    <footer class="app-footer">
+      <button id="settingsBtn" class="footer-btn" type="button">⚙ Fontes</button>
+      <button id="manualTideBtn" class="footer-btn" type="button">↕ Ajustar maré</button>
+    </footer>
+  </div>
+
+  <dialog id="settingsDialog" class="modal">
+    <form method="dialog" class="modal__box">
+      <div class="modal__header">
+        <h2>Fontes e atualização</h2>
+        <button class="icon-btn" value="close" type="submit">×</button>
+      </div>
+      <p class="muted">A app atualiza automaticamente e recalcula os scores. Sem chave de marés, usa estimativa local e permite ajuste manual.</p>
+      <label class="field">
+        <span>WorldTides API key opcional</span>
+        <input id="worldTidesKey" type="password" placeholder="Opcional" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Intervalo de atualização</span>
+        <select id="refreshInterval">
+          <option value="5">5 minutos</option>
+          <option value="10" selected>10 minutos</option>
+          <option value="15">15 minutos</option>
+          <option value="30">30 minutos</option>
+        </select>
+      </label>
+      <div class="modal__actions">
+        <button id="saveSettings" class="primary-btn" value="default" type="submit">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="tideDialog" class="modal">
+    <form method="dialog" class="modal__box">
+      <div class="modal__header">
+        <h2>Ajuste manual da maré</h2>
+        <button class="icon-btn" value="close" type="submit">×</button>
+      </div>
+      <p class="muted">Usa quando confirmares a tabela de marés oficial. A app recalcula maré, corrente, janelas e score de pesca.</p>
+      <div class="field-grid">
+        <label class="field"><span>Baixa-mar</span><input id="manualLow" type="time" /></label>
+        <label class="field"><span>Preia-mar</span><input id="manualHigh" type="time" /></label>
+        <label class="field"><span>Altura baixa</span><input id="manualLowHeight" type="number" step="0.1" placeholder="0.7" /></label>
+        <label class="field"><span>Altura alta</span><input id="manualHighHeight" type="number" step="0.1" placeholder="3.3" /></label>
+      </div>
+      <div class="modal__actions">
+        <button id="clearManualTide" class="secondary-btn" value="default" type="button">Limpar ajuste</button>
+        <button id="saveManualTide" class="primary-btn" value="default" type="submit">Aplicar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="js/config.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

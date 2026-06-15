@@ -1,0 +1,9 @@
+{
+  "name": "Pesca Culatra",
+  "short_name": "Culatra",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#edf7f8",
+  "theme_color": "#0b5f73",
+  "icons": [{"src":"assets/icon.svg","sizes":"any","type":"image/svg+xml"}]
+}
