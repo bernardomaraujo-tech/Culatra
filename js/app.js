@@ -570,49 +570,91 @@
     return 62;
   }
 
+  function rangeLabel(start, end) {
+    const s = new Date(start);
+    const e = new Date(end);
+    if (!Number.isFinite(s.getTime()) || !Number.isFinite(e.getTime())) return '--';
+    const sameDay = s.toDateString() === e.toDateString();
+    return sameDay ? `${formatDateTime(s)} - ${formatTime(e)}` : `${formatDateTime(s)} - ${formatDateTime(e)}`;
+  }
+
   function bestWindows(data, minScore = 65, max = 3) {
-    const hours = upcomingHours(data.hourly || [], 48);
-    const groups = [];
-    let current = [];
-    hours.forEach(h => {
-      if (h.score.value >= minScore) current.push(h);
-      else if (current.length) { groups.push(current); current = []; }
-    });
-    if (current.length) groups.push(current);
-    return groups
-      .map(group => ({
+    const hours = upcomingHours(data.hourly || [], 24);
+    const windowSize = 3;
+    const candidates = [];
+
+    for (let i = 0; i <= hours.length - windowSize; i++) {
+      const group = hours.slice(i, i + windowSize);
+      const score = Math.round(mean(group.map(h => h.score.value)));
+      if (score < minScore) continue;
+      candidates.push({
+        index: i,
         start: group[0].time,
         end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
-        score: Math.round(mean(group.map(h => h.score.value))),
-        reason: explainBest(activeZone(), group[Math.floor(group.length / 2)])
-      }))
-      .sort((a, b) => b.score - a.score)
-      .slice(0, max);
+        score,
+        reason: explainBestGroup(data.zone, group, data.tide.source)
+      });
+    }
+
+    const selected = [];
+    candidates
+      .sort((a, b) => b.score - a.score || new Date(a.start) - new Date(b.start))
+      .forEach(candidate => {
+        const overlaps = selected.some(item => Math.abs(item.index - candidate.index) < windowSize);
+        if (!overlaps && selected.length < max) selected.push(candidate);
+      });
+
+    return selected.sort((a, b) => new Date(a.start) - new Date(b.start));
   }
 
   function avoidWindows(data, max = 3) {
-    const groups = [];
-    let current = [];
-    upcomingHours(data.hourly, 48).forEach(h => {
-      const risky = h.score.value < 45 || h.weather.windSpeed > data.zone.limits.windWarn || h.weather.gusts > data.zone.limits.gustWarn || h.marine.waveHeight > data.zone.limits.waveBlock;
-      if (risky) current.push(h);
-      else if (current.length) { groups.push(current); current = []; }
-    });
-    if (current.length) groups.push(current);
-    return groups.map(group => ({
-      start: group[0].time,
-      end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
-      score: Math.round(mean(group.map(h => h.score.value))),
-      reason: explainAvoid(data.zone, group[Math.floor(group.length / 2)])
-    })).slice(0, max);
+    const hours = upcomingHours(data.hourly || [], 24);
+    const windowSize = 2;
+    const candidates = [];
+
+    for (let i = 0; i <= hours.length - windowSize; i++) {
+      const group = hours.slice(i, i + windowSize);
+      const risky = group.some(h => h.score.value < 45 || h.weather.windSpeed > data.zone.limits.windWarn || h.weather.gusts > data.zone.limits.gustWarn || h.marine.waveHeight > data.zone.limits.waveBlock);
+      if (!risky) continue;
+      candidates.push({
+        index: i,
+        start: group[0].time,
+        end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
+        score: Math.round(mean(group.map(h => h.score.value))),
+        reason: explainAvoid(data.zone, group[Math.floor(group.length / 2)])
+      });
+    }
+
+    const selected = [];
+    candidates
+      .sort((a, b) => a.score - b.score || new Date(a.start) - new Date(b.start))
+      .forEach(candidate => {
+        const overlaps = selected.some(item => Math.abs(item.index - candidate.index) < windowSize);
+        if (!overlaps && selected.length < max) selected.push(candidate);
+      });
+
+    return selected.sort((a, b) => new Date(a.start) - new Date(b.start));
   }
 
   function explainBest(zone, hour) {
+    return explainBestGroup(zone, [hour]);
+  }
+
+  function explainBestGroup(zone, group, tideSource = '') {
     const bits = [];
-    if (hour.tide.phase === 'A subir') bits.push('maré a subir'); else bits.push('maré a mexer');
-    if (hour.lowLight) bits.push('pouca luz');
-    if (hour.weather.windSpeed <= zone.limits.windWarn) bits.push('vento controlado');
-    if (hour.marine.waveHeight <= zone.limits.waveWarn) bits.push('mar controlado');
+    const phases = group.map(h => h.tide.phase).filter(Boolean);
+    const uniquePhases = Array.from(new Set(phases));
+    const avgWind = mean(group.map(h => h.weather.windSpeed || 0));
+    const maxWave = Math.max(...group.map(h => h.marine.waveHeight || 0));
+
+    const estimated = String(tideSource || '').toLowerCase().includes('estimativa');
+    if (uniquePhases.length === 1 && uniquePhases[0] === 'A subir') bits.push(estimated ? 'maré estimada a subir' : 'maré a subir');
+    else if (uniquePhases.length === 1 && uniquePhases[0] === 'A descer') bits.push(estimated ? 'maré estimada a descer' : 'maré a descer');
+    else bits.push(estimated ? 'maré estimada a mexer' : 'maré a mexer');
+
+    if (group.some(h => h.lowLight)) bits.push('pouca luz');
+    if (avgWind <= zone.limits.windWarn) bits.push('vento controlado');
+    if (maxWave <= zone.limits.waveWarn) bits.push('mar controlado');
     return bits.slice(0, 3).join(' + ');
   }
 
@@ -1083,7 +1125,7 @@
     const factors = Object.entries(cur.score.parts).map(([key, value]) => ({ key, label: factorLabel(key), value, weight: zone.weights[key] })).sort((a, b) => b.weight - a.weight);
 
     els.content.innerHTML = `
-      ${section('Condições de pesca', `Decisão para ${zone.name}. Score recalculado com meteorologia, maré, mar, lua e luz.`, `
+      ${section('Condições de pesca', `Decisão para ${zone.name}. Score recalculado para as próximas 24h com meteorologia, maré, mar, lua e luz.`, `
         <div class="score-hero score-hero--${zone.color}">
           <div class="score-ring" style="--score:${cur.score.value}"><strong>${cur.score.value}</strong><span>/100</span></div>
           <div class="score-hero__copy">
@@ -1094,11 +1136,11 @@
         </div>
         <canvas id="scoreChart" class="chart" height="190"></canvas>
       `)}
-      ${section('Melhores horas', 'Janelas com score mais alto nas próximas 48 horas.', `
-        <div class="event-list event-list--accent">${best.length ? best.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem janela forte nas próximas 48 horas.</p>'}</div>
+      ${section('Melhores horas', 'Janelas com score mais alto nas próximas 24 horas.', `
+        <div class="event-list event-list--accent">${best.length ? best.map(w => `<article><strong>${rangeLabel(w.start, w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem janela forte nas próximas 24 horas.</p>'}</div>
       `)}
       ${section('Horas a evitar', 'Janelas penalizadas por vento, mar, corrente ou score baixo.', `
-        <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
+        <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${rangeLabel(w.start, w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
       `)}
       ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
         <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
@@ -1141,7 +1183,7 @@
     ], { suffix: 'm', min: 0, max: null, annotateExtremaSeries: 1 });
 
     const scoreCanvas = $('#scoreChart');
-    if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 48), [
+    if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 24), [
       { key: h => h.score.value, label: 'Score' }
     ], { suffix: '', min: 0, max: 100 });
   }
