@@ -1,85 +1,76 @@
-# Pesca Culatra — App Live
+# Culatra Hoje
 
-Aplicação mobile-first para apoio à decisão de pesca na Ilha da Culatra.
+Aplicação mobile-first para apoio à decisão na Ilha da Culatra, com foco em meteorologia, marés, lua, praia e pesca.
 
-## Conceito
+## Separadores principais
 
-Uma página única, em formato de app para iPhone, com 4 separadores principais:
+- Meteorologia
+- Marés
+- Lua
+- Pesca
 
-1. **Meteorologia**
-2. **Marés**
-3. **Lua**
-4. **Pesca**
+## Zonas analisadas
 
-A zona é selecionada no topo da página:
+- Sul / Ria Formosa
+- Norte / Atlântico
+- Ponta da Ilha
 
-- **Sul / Ria Formosa**
-- **Norte / Atlântico**
-- **Ponta da Ilha**
+## Fontes de dados
 
-Toda a informação dos separadores é recalculada com base na zona selecionada.
+- Open-Meteo Weather para meteorologia
+- Open-Meteo Marine para estado do mar
+- WorldTides opcional para marés reais
+- Estimativa local de maré quando não existe chave API
 
-## Funcionalidades
+## Atualização
 
-- Atualização automática configurável: 5, 10, 15 ou 30 minutos.
-- Atualização manual por botão.
-- Dados live via Open-Meteo Weather.
-- Dados live via Open-Meteo Marine.
-- Marés por WorldTides quando existe chave API.
-- Marés estimadas quando não existe chave.
-- Ajuste manual de baixa-mar, preia-mar e alturas.
-- Cálculo de:
-  - score de pesca
-  - probabilidade estimada
-  - melhores janelas horárias
-  - horas a evitar
-  - espécies prováveis
-  - fatores que influenciam o score
-- Gráficos desenhados em canvas, sem dependências externas.
-- Funciona em GitHub Pages.
+A aplicação atualiza automaticamente no intervalo definido nas fontes e permite atualização manual.
 
-## Estrutura
+## Correção desta versão
 
-```text
-pesca-culatra-live/
-├── index.html
-├── manifest.webmanifest
-├── assets/
-│   ├── culatra-map.png
-│   └── icon.svg
-├── css/
-│   └── styles.css
-├── js/
-│   ├── app.js
-│   └── config.js
-└── docs/
-    └── FUNCIONAL.md
-```
+Esta versão repõe integralmente o ficheiro `css/styles.css`, que estava corrompido com conteúdo que não era CSS. A falha fazia com que a página aparecesse sem formatação no iPhone/Safari.
 
-## Testar localmente
 
-```bash
-cd pesca-culatra-live
-python3 -m http.server 8080
-```
+## Atualização meteorologia
 
-Depois abrir:
+- Adicionada leitura de **tempo de praia** com score próprio.
+- Adicionada legenda no gráfico das próximas 24 horas.
+- Os cartões horários agora mostram **hora, temperatura, vento e direção do vento**.
+- A lista horária é horizontal e deve ser deslizada no telemóvel para ver mais horas.
+- Adicionada secção dedicada à **direção do vento ao longo do dia**.
 
-```text
-http://localhost:8080
-```
+## Atualização 15/06 - Meteorologia
 
-## Publicar no GitHub Pages
+A secção Meteorologia foi ajustada para:
 
-1. Criar repositório no GitHub.
-2. Fazer upload de todos os ficheiros desta pasta.
-3. Ir a **Settings > Pages**.
-4. Selecionar **Deploy from branch**.
-5. Escolher branch `main` e pasta `/root`.
+- mostrar apenas a hora atual e as próximas horas;
+- evitar cartões com horas já passadas no início da lista;
+- permitir navegação horizontal com gesto e botões laterais;
+- mostrar legenda do gráfico de temperatura e vento;
+- mostrar direção do vento com texto e seta visual;
+- orientar a leitura para apoio à decisão de praia, conforto e exposição ao vento.
 
-## Notas importantes
 
-- A meteorologia e o mar funcionam sem chave API através do Open-Meteo.
-- Para marés reais, configurar uma chave WorldTides na app em **Fontes**.
-- Sem chave de marés, a app usa estimativa local e permite ajuste manual.
-- A app prevê condições favoráveis, não garante captura.
+## Atualização direção do vento
+
+- Direções do vento apresentadas em siglas portuguesas: N, NE, E, SE, S, SO, O e NO.
+- As setas respeitam a direção de origem do vento: Norte aponta para cima e Sul aponta para baixo.
+
+
+## Critério praia
+
+A classificação de praia usa vento mais exigente do que a meteorologia geral:
+
+- 0-8 km/h: excelente
+- 9-14 km/h: bom / brisa
+- 15-22 km/h: moderado
+- 23-30 km/h: mau, provável areia a levantar
+- >30 km/h: evitar
+
+As rajadas também penalizam: acima de 23 km/h passa a moderado, acima de 29 km/h passa a mau e acima de 35 km/h passa a evitar.
+
+## Zonas
+
+- Sul / Atlântico
+- Norte / Ria Formosa
+- Ponta da Ilha
