@@ -1,0 +1,12 @@
+{
+  "name": "Pesca Culatra",
+  "short_name": "Culatra",
+  "description": "Previsão de condições de pesca por zona na Ilha da Culatra.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7fbfb",
+  "theme_color": "#0b5f73",
+  "icons": [
+    { "src": "assets/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
