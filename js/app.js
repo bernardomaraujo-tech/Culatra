@@ -711,31 +711,54 @@
     const next24 = data.hourly.slice(0, 24);
     const avgWind = round(mean(next24.map(h => h.weather.windSpeed)));
     const maxGust = Math.max(...next24.map(h => h.weather.gusts || 0));
-    const minTemp = Math.min(...next24.map(h => h.weather.temperature || 0));
-    const maxTemp = Math.max(...next24.map(h => h.weather.temperature || 0));
+    const temps = next24.map(h => h.weather.temperature).filter(Number.isFinite);
+    const minTemp = Math.min(...temps);
+    const maxTemp = Math.max(...temps);
     const windTone = cur.weather.windSpeed > zone.limits.windWarn ? 'warn' : 'good';
+    const beach = beachDecision(zone, cur, next24);
+    const dominantWind = dominantWindDirection(next24);
 
     els.content.innerHTML = `
-      ${section('Meteorologia', `Estado atual para ${zone.name}. Atualiza automaticamente.`, `
+      ${section('Tempo de praia', `Estado atual para ${zone.name}. Atualiza automaticamente.`, `
+        <div class="beach-hero beach-hero--${beach.tone}">
+          <div class="beach-score" style="--score:${beach.score}"><strong>${beach.score}</strong><span>/100</span></div>
+          <div>
+            <p>Condição para praia</p>
+            <strong>${beach.label}</strong>
+            <span>${beach.summary}</span>
+          </div>
+        </div>
         <div class="metrics-grid">
           ${metric('Temperatura', `${cur.weather.temperature} °C`, `sensação ${cur.weather.apparentTemperature} °C`, 'blue')}
-          ${metric('Vento', `${cur.weather.windSpeed} km/h`, cur.weather.windDirectionText, windTone)}
-          ${metric('Rajadas', `${cur.weather.gusts} km/h`, cur.weather.gusts > zone.limits.gustWarn ? 'atenção' : 'controlado', cur.weather.gusts > zone.limits.gustWarn ? 'warn' : 'good')}
-          ${metric('Pressão', `${cur.weather.pressure} hPa`, pressureText(cur.weather.pressure), 'blue')}
-          ${metric('Humidade', `${cur.weather.humidity}%`, 'ar', '')}
+          ${metric('Vento agora', `${cur.weather.windSpeed} km/h`, `${cur.weather.windDirectionText} · ${windBeachText(cur.weather.windSpeed)}`, windTone)}
+          ${metric('Rajadas', `${cur.weather.gusts} km/h`, cur.weather.gusts > zone.limits.gustWarn ? 'atenção' : 'controladas', cur.weather.gusts > zone.limits.gustWarn ? 'warn' : 'good')}
           ${metric('Chuva', `${cur.weather.precipitationProbability}%`, 'probabilidade', cur.weather.precipitationProbability > 35 ? 'warn' : 'good')}
+          ${metric('Humidade', `${cur.weather.humidity}%`, humidityText(cur.weather.humidity), '')}
+          ${metric('Pressão', `${cur.weather.pressure} hPa`, pressureText(cur.weather.pressure), 'blue')}
         </div>
       `)}
-      ${section('Próximas 24 horas', 'Temperatura e vento para avaliar conforto e segurança.', `
+      ${section('Próximas 24 horas', 'Gráfico com temperatura e vento. Os cartões em baixo deslizam na horizontal.', `
+        <div class="chart-legend" aria-label="Legenda do gráfico">
+          <span><i class="legend-dot legend-dot--temp"></i>Temperatura °C</span>
+          <span><i class="legend-dot legend-dot--wind"></i>Vento km/h</span>
+        </div>
         <canvas id="weatherChart" class="chart" height="190"></canvas>
-        <div class="forecast-strip">${next24.slice(0, 12).map(hourMiniWeather).join('')}</div>
+        <p class="strip-hint">Desliza para ver hora a hora. Cada cartão mostra temperatura, vento e direção.</p>
+        <div class="forecast-strip">${next24.map(hourMiniWeather).join('')}</div>
+      `)}
+      ${section('Direção do vento', 'A direção do vento ao longo do dia ajuda a perceber conforto, abrigo e exposição da praia.', `
+        <div class="wind-strip">${next24.filter((_, i) => i % 2 === 0).map(hourWindDirection).join('')}</div>
+        <div class="decision-list">
+          <div><strong>Direção dominante</strong><span>${dominantWind}. Confirma no local porque na ilha pequenas mudanças de direção alteram bastante o conforto.</span></div>
+          <div><strong>Vento médio</strong><span>${avgWind} km/h nas próximas 24 h, com rajada máxima prevista de ${maxGust} km/h.</span></div>
+        </div>
       `)}
       ${section('Leitura para decisão', '', `
         <div class="decision-list">
-          <div><strong>Resumo</strong><span>${weatherDecision(zone, cur)}</span></div>
+          <div><strong>Resumo praia</strong><span>${beach.advice}</span></div>
           <div><strong>Variação térmica</strong><span>${round(minTemp)} °C a ${round(maxTemp)} °C nas próximas 24 h.</span></div>
-          <div><strong>Vento médio</strong><span>${avgWind} km/h, com rajada máxima prevista de ${maxGust} km/h.</span></div>
           <div><strong>Impacto na zona</strong><span>${zone.description}</span></div>
+          <div><strong>Nota pesca</strong><span>${weatherDecision(zone, cur)}</span></div>
         </div>
       `)}
     `;
@@ -748,6 +771,83 @@
     return 'Condições meteorológicas utilizáveis para pesca casual.';
   }
 
+  function beachDecision(zone, cur, next24) {
+    let score = 100;
+    const avgWind = mean(next24.map(h => h.weather.windSpeed));
+    const maxGust = Math.max(...next24.map(h => h.weather.gusts || 0));
+    const rain = cur.weather.precipitationProbability || 0;
+    const temp = cur.weather.apparentTemperature || cur.weather.temperature;
+    const cloud = cur.weather.cloudCover || 0;
+
+    if (temp < 18) score -= 28;
+    else if (temp < 21) score -= 14;
+    else if (temp > 32) score -= 18;
+    else if (temp > 29) score -= 8;
+
+    if (avgWind > 30) score -= 34;
+    else if (avgWind > 24) score -= 22;
+    else if (avgWind > 18) score -= 10;
+
+    if (maxGust > 40) score -= 24;
+    else if (maxGust > 32) score -= 14;
+
+    if (rain > 55) score -= 34;
+    else if (rain > 35) score -= 18;
+    else if (rain > 20) score -= 8;
+
+    if (cloud > 75) score -= 8;
+    score = clamp(Math.round(score), 0, 100);
+
+    let label = 'Boa';
+    let tone = 'good';
+    if (score < 45) { label = 'Evitar'; tone = 'bad'; }
+    else if (score < 65) { label = 'Razoável'; tone = 'warn'; }
+    else if (score < 80) { label = 'Boa'; tone = 'blue'; }
+    else { label = 'Muito boa'; tone = 'good'; }
+
+    const summary = score >= 80
+      ? 'Boa para praia, com conforto e vento controlado.'
+      : score >= 65
+        ? 'Dá para praia, mas convém confirmar vento e rajadas.'
+        : score >= 45
+          ? 'Condições aceitáveis, mas pouco confortáveis.'
+          : 'Fraca para praia. Melhor procurar outra janela.';
+
+    const advice = score >= 80
+      ? 'Bom cenário para ir à praia. Levar proteção solar, água e confirmar sempre vento no local.'
+      : score >= 65
+        ? 'Ainda faz sentido ir à praia, mas escolhe zona mais abrigada se o vento subir.'
+        : score >= 45
+          ? 'A ida à praia pode ser desconfortável. Prioriza horários com menos vento e menos rajadas.'
+          : 'Não é boa janela para praia. A meteorologia está a penalizar conforto e segurança.';
+
+    return { score, label, tone, summary, advice };
+  }
+
+  function windBeachText(speed) {
+    if (speed >= 30) return 'muito vento';
+    if (speed >= 24) return 'vento forte';
+    if (speed >= 16) return 'vento moderado';
+    if (speed >= 8) return 'vento leve';
+    return 'quase sem vento';
+  }
+
+  function humidityText(humidity) {
+    if (humidity >= 80) return 'mais abafado';
+    if (humidity <= 45) return 'ar seco';
+    return 'confortável';
+  }
+
+  function dominantWindDirection(hours) {
+    const counts = new Map();
+    hours.forEach(h => {
+      const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
+      if (!dir || dir === '--') return;
+      counts.set(dir, (counts.get(dir) || 0) + 1);
+    });
+    return Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] || '--';
+  }
+
   function pressureText(p) {
     if (p >= 1014 && p <= 1024) return 'estável';
     if (p < 1008) return 'baixa';
@@ -756,7 +856,13 @@
   }
 
   function hourMiniWeather(h) {
-    return `<article class="mini-card"><strong>${formatTime(h.time)}</strong><span>${h.weather.temperature} °C</span><em>${h.weather.windSpeed} km/h</em></article>`;
+    const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
+    return `<article class="mini-card mini-card--weather"><strong>${formatTime(h.time)}</strong><span>${h.weather.temperature} °C</span><em>${h.weather.windSpeed} km/h</em><small>${dir}</small></article>`;
+  }
+
+  function hourWindDirection(h) {
+    const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
+    return `<article class="wind-card"><strong>${formatTime(h.time)}</strong><span>${dir}</span><em>${h.weather.windSpeed} km/h</em></article>`;
   }
 
   function renderMares() {
