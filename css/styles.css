@@ -69,21 +69,21 @@ button { cursor: pointer; }
   flex: 0 0 auto;
 }
 
-.eyebrow {
-  margin: 0 0 3px;
-  color: var(--teal-dark);
-  font-size: .72rem;
-  line-height: 1;
-  font-weight: 900;
-  letter-spacing: .07em;
-  text-transform: uppercase;
-}
+.brand__copy { min-width: 0; }
 
 h1 {
   margin: 0;
-  font-size: clamp(1.55rem, 8vw, 2.15rem);
-  line-height: 1;
+  font-size: clamp(1.45rem, 7.2vw, 2rem);
+  line-height: 1.02;
   letter-spacing: -.05em;
+}
+
+.brand-subtitle {
+  margin: 6px 0 0;
+  color: var(--teal-dark);
+  font-size: .78rem;
+  line-height: 1.25;
+  font-weight: 850;
 }
 
 .icon-btn {
