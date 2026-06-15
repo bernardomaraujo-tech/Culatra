@@ -1,8 +1,8 @@
-# Documento funcional — Pesca Culatra
+# Documento funcional — Culatra Hoje
 
 ## Objetivo
 
-Criar uma página/app interativa para apoiar a decisão de pesca na Ilha da Culatra, considerando a diferença entre:
+Criar uma página/app interativa para apoiar a decisão de ida à Ilha da Culatra, incluindo praia, meteorologia, marés, lua e pesca, considerando a diferença entre:
 
 - Sul / Ria Formosa
 - Norte / Atlântico
