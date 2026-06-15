@@ -336,6 +336,7 @@ h1 {
 .metric--good { background: #ecf8f2; border-color: #caedd9; }
 .metric--warn { background: #fff4ea; border-color: #ffd6b6; }
 .metric--blue { background: #edf6ff; border-color: #cfe4f7; }
+.metric--bad { background: #fff0f0; border-color: #ffc9c9; }
 
 .chart {
   display: block;
