@@ -738,7 +738,7 @@
     const temps = next24.map(h => h.weather.temperature).filter(Number.isFinite);
     const minTemp = Math.min(...temps);
     const maxTemp = Math.max(...temps);
-    const windTone = cur.weather.windSpeed > zone.limits.windWarn ? 'warn' : 'good';
+    const windTone = beachWindTone(cur.weather.windSpeed, cur.weather.gusts);
     const beach = beachDecision(zone, cur, next24);
     const dominantWind = dominantWindDirection(next24);
 
@@ -810,18 +810,23 @@
     const rain = cur.weather.precipitationProbability || 0;
     const temp = cur.weather.apparentTemperature || cur.weather.temperature;
     const cloud = cur.weather.cloudCover || 0;
+    const referenceWind = Math.max(cur.weather.windSpeed || 0, avgWind || 0);
 
-    if (temp < 18) score -= 28;
-    else if (temp < 21) score -= 14;
+    // Critério praia: qualquer coisa acima de brisa deixa de ser "bom".
+    if (temp < 18) score -= 30;
+    else if (temp < 21) score -= 15;
     else if (temp > 32) score -= 18;
     else if (temp > 29) score -= 8;
 
-    if (avgWind > 30) score -= 34;
-    else if (avgWind > 24) score -= 22;
-    else if (avgWind > 18) score -= 10;
+    if (referenceWind > 30) score -= 48;
+    else if (referenceWind >= 23) score -= 35;
+    else if (referenceWind >= 15) score -= 22;
+    else if (referenceWind >= 9) score -= 8;
 
-    if (maxGust > 40) score -= 24;
-    else if (maxGust > 32) score -= 14;
+    if (maxGust > 35) score -= 32;
+    else if (maxGust >= 29) score -= 24;
+    else if (maxGust >= 23) score -= 14;
+    else if (maxGust >= 19) score -= 6;
 
     if (rain > 55) score -= 34;
     else if (rain > 35) score -= 18;
@@ -830,38 +835,53 @@
     if (cloud > 75) score -= 8;
     score = clamp(Math.round(score), 0, 100);
 
-    let label = 'Boa';
+    let label = 'Bom';
     let tone = 'good';
-    if (score < 45) { label = 'Evitar'; tone = 'bad'; }
-    else if (score < 65) { label = 'Razoável'; tone = 'warn'; }
-    else if (score < 80) { label = 'Boa'; tone = 'blue'; }
-    else { label = 'Muito boa'; tone = 'good'; }
+    if (referenceWind > 30 || maxGust > 35 || score < 40) { label = 'Evitar'; tone = 'bad'; }
+    else if (referenceWind >= 23 || maxGust >= 29 || score < 55) { label = 'Mau'; tone = 'bad'; }
+    else if (referenceWind >= 15 || maxGust >= 23 || score < 72) { label = 'Moderado'; tone = 'warn'; }
+    else if (referenceWind >= 9 || maxGust >= 19 || score < 86) { label = 'Bom'; tone = 'blue'; }
+    else { label = 'Excelente'; tone = 'good'; }
 
-    const summary = score >= 80
-      ? 'Boa para praia, com conforto e vento controlado.'
-      : score >= 65
-        ? 'Dá para praia, mas convém confirmar vento e rajadas.'
-        : score >= 45
-          ? 'Condições aceitáveis, mas pouco confortáveis.'
-          : 'Fraca para praia. Melhor procurar outra janela.';
+    const sandRisk = referenceWind >= 23 || maxGust >= 29 ? 'alto' : referenceWind >= 15 || maxGust >= 23 ? 'médio' : 'baixo';
 
-    const advice = score >= 80
-      ? 'Bom cenário para ir à praia. Levar proteção solar, água e confirmar sempre vento no local.'
-      : score >= 65
-        ? 'Ainda faz sentido ir à praia, mas escolhe zona mais abrigada se o vento subir.'
-        : score >= 45
-          ? 'A ida à praia pode ser desconfortável. Prioriza horários com menos vento e menos rajadas.'
-          : 'Não é boa janela para praia. A meteorologia está a penalizar conforto e segurança.';
+    const summary = label === 'Excelente'
+      ? 'Vento fraco, bom conforto para praia.'
+      : label === 'Bom'
+        ? 'Brisa aceitável para praia.'
+        : label === 'Moderado'
+          ? 'Já passa de brisa. Pode incomodar na toalha.'
+          : label === 'Mau'
+            ? 'Provável desconforto e areia a levantar.'
+            : 'Demasiado vento para praia confortável.';
 
-    return { score, label, tone, summary, advice };
+    const advice = label === 'Excelente'
+      ? `Boa janela para praia. Vento fraco e risco de areia ${sandRisk}.`
+      : label === 'Bom'
+        ? `Praia recomendável, mas manter atenção a rajadas. Risco de areia ${sandRisk}.`
+        : label === 'Moderado'
+          ? `Praia possível, mas escolher zona abrigada. Vento já perceptível e risco de areia ${sandRisk}.`
+          : label === 'Mau'
+            ? `Pouco recomendável para praia. Vento suficiente para levantar areia e tornar a permanência desconfortável.`
+            : `Evitar praia exposta. Vento e rajadas demasiado fortes para conforto e segurança.`;
+
+    return { score, label, tone, summary, advice, sandRisk };
   }
 
   function windBeachText(speed) {
-    if (speed >= 30) return 'muito vento';
-    if (speed >= 24) return 'vento forte';
-    if (speed >= 16) return 'vento moderado';
-    if (speed >= 8) return 'vento leve';
-    return 'quase sem vento';
+    if (speed > 30) return 'evitar praia';
+    if (speed >= 23) return 'levanta areia';
+    if (speed >= 15) return 'moderado';
+    if (speed >= 9) return 'brisa';
+    return 'vento fraco';
+  }
+
+  function beachWindTone(speed, gusts = 0) {
+    if (speed > 30 || gusts > 35) return 'bad';
+    if (speed >= 23 || gusts >= 29) return 'bad';
+    if (speed >= 15 || gusts >= 23) return 'warn';
+    if (speed >= 9 || gusts >= 19) return 'blue';
+    return 'good';
   }
 
   function humidityText(humidity) {
