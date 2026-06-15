@@ -94,7 +94,7 @@
 
   function dirText(degrees) {
     if (degrees === null || degrees === undefined || Number.isNaN(Number(degrees))) return '--';
-    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const dirs = ['Norte', 'Nordeste', 'Este', 'Sudeste', 'Sul', 'Sudoeste', 'Oeste', 'Noroeste'];
     return dirs[Math.round(Number(degrees) / 45) % 8];
   }
 
@@ -128,7 +128,9 @@
   function windArrowMarkup(degrees) {
     const value = Number(degrees);
     if (!Number.isFinite(value)) return '<i class="wind-arrow wind-arrow--unknown" aria-hidden="true">•</i>';
-    return `<i class="wind-arrow" style="--deg:${value}deg" aria-hidden="true">↑</i>`;
+    const label = dirText(value);
+    // A seta representa a direção de onde vem o vento: Norte aponta para cima, Sul aponta para baixo.
+    return `<i class="wind-arrow" style="--deg:${value}deg" title="Vento de ${label}" aria-label="Vento de ${label}">↑</i>`;
   }
 
   async function fetchJson(url, options = {}) {
