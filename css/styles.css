@@ -877,11 +877,11 @@ h1 {
   }
 }
 
-/* Ajuste 15/06 - direção do vento em português */
+/* Ajuste 15/06 - direção do vento em siglas portuguesas */
 .forecast-strip .mini-card,
 .wind-strip .wind-card {
-  flex-basis: 108px;
-  min-width: 108px;
+  flex-basis: 92px;
+  min-width: 92px;
 }
 
 .mini-card--weather small,
@@ -893,7 +893,7 @@ h1 {
 .mini-card--weather small b,
 .wind-card .wind-dir b {
   display: inline-block;
-  max-width: 72px;
+  max-width: 42px;
   line-height: 1.05;
   white-space: normal;
   overflow-wrap: anywhere;
