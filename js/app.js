@@ -125,12 +125,16 @@
     return (future.length ? future : list).slice(0, count);
   }
 
-  function windArrowMarkup(degrees) {
+  function directionArrowMarkup(degrees, label = '') {
     const value = Number(degrees);
     if (!Number.isFinite(value)) return '<i class="wind-arrow wind-arrow--unknown" aria-hidden="true">•</i>';
-    const label = dirText(value);
-    // A seta representa a direção de onde vem o vento: Norte aponta para cima, Sul aponta para baixo.
-    return `<i class="wind-arrow" style="--deg:${value}deg" title="Vento ${label}" aria-label="Vento ${label}">↑</i>`;
+    const dir = dirText(value);
+    const tooltip = label ? `${label} ${dir}` : dir;
+    return `<i class="wind-arrow" style="--deg:${value}deg" title="${tooltip}" aria-label="${tooltip}">↑</i>`;
+  }
+
+  function windArrowMarkup(degrees) {
+    return directionArrowMarkup(degrees, 'Vento');
   }
 
   async function fetchJson(url, options = {}) {
@@ -733,6 +737,7 @@
     const cur = data.current;
     const zone = data.zone;
     const next24 = upcomingHours(data.hourly, 24);
+    const next12 = upcomingHours(data.hourly, 12);
     const avgWind = round(mean(next24.map(h => h.weather.windSpeed)));
     const maxGust = Math.max(...next24.map(h => h.weather.gusts || 0));
     const temps = next24.map(h => h.weather.temperature).filter(Number.isFinite);
@@ -761,18 +766,34 @@
           ${metric('Pressão', `${cur.weather.pressure} hPa`, pressureText(cur.weather.pressure), 'blue')}
         </div>
       `)}
-      ${section('Próximas 24 horas', 'Gráfico com temperatura e vento. Os cartões em baixo deslizam na horizontal.', `
+      ${section('Resumo horário', 'Quadro de leitura rápida com previsão horária das próximas horas.', `
+        <div class="table-scroll">
+          <table class="meteo-table" aria-label="Resumo horário de meteorologia e mar">
+            <thead>
+              <tr>
+                <th>Hora</th>
+                <th>Onda</th>
+                <th>Dir.<small>ondas</small></th>
+                <th>Período</th>
+                <th>Vento</th>
+                <th>Dir.<small>vento</small></th>
+                <th>Temp.</th>
+                <th>Céu</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${next12.map(hourOverviewRow).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">A tabela começa sempre na hora atual e apresenta apenas as próximas horas.</p>
+      `)}
+      ${section('Próximas 24 horas', 'Gráfico com temperatura e vento.', `
         <div class="chart-legend" aria-label="Legenda do gráfico">
           <span><i class="legend-dot legend-dot--temp"></i>Temperatura °C</span>
           <span><i class="legend-dot legend-dot--wind"></i>Vento km/h</span>
         </div>
         <canvas id="weatherChart" class="chart" height="190"></canvas>
-        <p class="strip-hint">Começa na hora atual. Desliza ou usa as setas para ver as próximas horas.</p>
-        <div class="carousel">
-          <button class="carousel-btn" type="button" data-scroll-target="weatherHours" data-scroll-dir="-1" aria-label="Ver horas anteriores">‹</button>
-          <div id="weatherHours" class="forecast-strip" tabindex="0">${next24.map(hourMiniWeather).join('')}</div>
-          <button class="carousel-btn" type="button" data-scroll-target="weatherHours" data-scroll-dir="1" aria-label="Ver próximas horas">›</button>
-        </div>
       `)}
       ${section('Direção do vento', 'A direção do vento ao longo do dia ajuda a perceber conforto, abrigo e exposição da praia.', `
         <div class="carousel">
@@ -915,6 +936,31 @@
   function hourWindDirection(h) {
     const dir = h.weather.windDirectionText || dirText(h.weather.windDirection);
     return `<article class="wind-card"><strong>${formatTime(h.time)}</strong><span class="wind-dir">${windArrowMarkup(h.weather.windDirection)}<b>${dir}</b></span><em>${h.weather.windSpeed} km/h</em></article>`;
+  }
+
+
+  function weatherSkyIcon(h) {
+    const rain = h.weather.precipitationProbability ?? 0;
+    const cloud = h.weather.cloudCover ?? 0;
+    if (rain >= 40) return '🌧️';
+    if (cloud >= 70) return '☁️';
+    if (cloud >= 35) return '⛅';
+    return '☀️';
+  }
+
+  function hourOverviewRow(h) {
+    const waveDir = h.marine.waveDirectionText || dirText(h.marine.waveDirection);
+    const windDir = h.weather.windDirectionText || dirText(h.weather.windDirection);
+    return `<tr>
+      <td><strong>${formatTime(h.time)}</strong></td>
+      <td>${h.marine.waveHeight ?? '--'} m</td>
+      <td><span class="dir-badge">${directionArrowMarkup(h.marine.waveDirection, 'Ondulação')}<b>${waveDir}</b></span></td>
+      <td>${h.marine.wavePeriod ?? '--'} s</td>
+      <td>${h.weather.windSpeed ?? '--'} km/h</td>
+      <td><span class="dir-badge">${windArrowMarkup(h.weather.windDirection)}<b>${windDir}</b></span></td>
+      <td>${h.weather.temperature ?? '--'} °C</td>
+      <td class="sky-cell">${weatherSkyIcon(h)}</td>
+    </tr>`;
   }
 
   function renderMares() {
