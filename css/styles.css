@@ -1,187 +1,582 @@
-Visual Studio Code 1.124
+:root {
+  --bg: #eaf5f6;
+  --bg-2: #f7fbfb;
+  --ink: #09233f;
+  --muted: #64788a;
+  --line: #dce9ee;
+  --card: rgba(255,255,255,.92);
+  --white: #fff;
+  --teal: #159d95;
+  --teal-dark: #0b6675;
+  --green: #37aa78;
+  --blue: #2871a9;
+  --orange: #f07d22;
+  --red: #d84b4b;
+  --shadow: 0 14px 38px rgba(7, 43, 66, .10);
+  --radius-xl: 28px;
+  --radius-lg: 22px;
+  --radius-md: 16px;
+  --radius-sm: 12px;
+  --font: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
 
-Show release notes after an update
+* { box-sizing: border-box; }
+html { min-height: 100%; background: var(--bg); }
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font);
+  background:
+    radial-gradient(circle at 20% 0%, rgba(255,255,255,.95) 0 10rem, transparent 22rem),
+    radial-gradient(circle at 78% 8%, rgba(40,113,169,.10), transparent 20rem),
+    linear-gradient(180deg, #eff8fa 0%, #e7f3f5 42%, #f7fbfb 100%);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: geometricPrecision;
+}
 
-Follow us on LinkedIn, X, Bluesky | View online
+button,
+input,
+select { font: inherit; }
+button { cursor: pointer; }
 
-Release date: June 10, 2026
+.app-shell {
+  width: min(100%, 460px);
+  margin: 0 auto;
+  padding: calc(14px + env(safe-area-inset-top)) 14px calc(96px + env(safe-area-inset-bottom));
+}
 
-Update 1.124.1: The update addresses these issues.
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
 
-Update 1.124.2: The update addresses these issues.
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
 
-Welcome to the 1.124 release of Visual Studio Code. This release makes it faster to work across agent sessions and gives agents more autonomy to finish your tasks.
+.brand__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgba(8,55,76,.18);
+  flex: 0 0 auto;
+}
 
-Autopilot: Autopilot, enabled by default, is now smarter to determine when a task is truly done.
+.eyebrow {
+  margin: 0 0 3px;
+  color: var(--teal-dark);
+  font-size: .72rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
 
-Background sessions: Quickly send a request in the background and keep composing the next session.
+h1 {
+  margin: 0;
+  font-size: clamp(1.55rem, 8vw, 2.15rem);
+  line-height: 1;
+  letter-spacing: -.05em;
+}
 
-Session navigation: Search, jump, and step through agent sessions with the keyboard.
+.icon-btn {
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(255,255,255,.88);
+  color: var(--teal-dark);
+  font-size: 1.05rem;
+  font-weight: 950;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 8px 18px rgba(7,43,66,.06);
+}
 
-Browser history: Revisit and search pages you've already opened in the integrated browser.
+.live-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0 0 12px;
+  padding-bottom: 2px;
+}
+.live-strip::-webkit-scrollbar { display: none; }
+.live-strip__text,
+.status {
+  flex: 0 0 auto;
+  border-radius: 999px;
+  padding: 8px 11px;
+  font-size: .75rem;
+  line-height: 1;
+  font-weight: 900;
+  background: rgba(255,255,255,.9);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.status--ok { background: #e9f8f1; border-color: #c8edd8; color: #14764e; }
+.status--warn { background: #fff4e8; border-color: #ffd8b8; color: #b75b13; }
+.status--error { background: #fff0f0; border-color: #ffc9c9; color: #a62d2d; }
+.status--loading { background: #eaf5ff; border-color: #c9e1f7; color: var(--blue); }
 
-Happy Coding!
+.hero-card,
+.panel {
+  background: var(--card);
+  border: 1px solid rgba(220,233,238,.9);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  backdrop-filter: blur(14px);
+}
+.hero-card { padding: 12px; margin-bottom: 12px; }
 
-VS Code is rolling out gradually to all users. Use Check for Updates in VS Code to get the latest version immediately.
+.map-wrap {
+  position: relative;
+  width: 100%;
+  max-height: 360px;
+  aspect-ratio: 1 / 1.08;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #d8eef0;
+  border: 1px solid var(--line);
+}
+.map-wrap img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+}
+.map-pin {
+  position: absolute;
+  border: 0;
+  border-radius: 18px;
+  background: transparent;
+  color: transparent;
+  width: 25%;
+  height: 22%;
+  padding: 0;
+}
+.map-pin--sul { left: 8%; top: 28%; }
+.map-pin--norte { right: 8%; top: 28%; }
+.map-pin--ponta { left: 38%; bottom: 3%; }
+.map-pin.is-active::after {
+  content: "";
+  position: absolute;
+  left: 50%; top: 50%;
+  width: 14px; height: 14px;
+  transform: translate(-50%, -50%);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 0 7px rgba(21,157,149,.20);
+}
 
-To try new features as soon as possible, download the nightly Insiders build, which includes the latest updates as soon as they are available.
+.zone-selector {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 10px;
+}
+.zone-chip,
+.tab,
+.footer-btn,
+.primary-btn,
+.secondary-btn {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(255,255,255,.9);
+  color: var(--muted);
+  font-weight: 950;
+}
+.zone-chip {
+  min-height: 48px;
+  padding: 8px 10px;
+  font-size: .78rem;
+  line-height: 1.1;
+}
+.zone-chip.is-active {
+  background: var(--teal-dark);
+  border-color: var(--teal-dark);
+  color: #fff;
+}
 
-In this update
-Agents Window
-Autopilot
-Editor Experience
-Enterprise
-Deprecated features and settings
-Thank you
-Agents window (Preview)
-The Agents window is a dedicated companion window optimized for exploring, iterating on, and reviewing agent sessions across projects and machines. This release focuses on making it faster to move between sessions and on preserving your context across reloads.
+.summary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.35fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+.summary-card {
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: rgba(255,255,255,.9);
+  padding: 13px;
+}
+.summary-card span,
+.metric span {
+  display: block;
+  color: var(--muted);
+  font-size: .74rem;
+  font-weight: 900;
+  letter-spacing: .02em;
+}
+.summary-card strong {
+  display: block;
+  margin-top: 4px;
+  font-size: 1.18rem;
+  line-height: 1.05;
+  letter-spacing: -.04em;
+}
+.summary-card--score strong {
+  color: var(--orange);
+  font-size: 1.75rem;
+}
+.summary-card em,
+.metric em {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: .76rem;
+  line-height: 1.25;
+  font-style: normal;
+  font-weight: 800;
+}
 
-Background send for new sessions
-Previously, starting a new session meant waiting for it to load before you could compose the next one. You can now send a request in the background instead: press Alt+Enter (or hold Alt and select Send) in the new session view.
+.tabs {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin: 12px 0;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: rgba(239,248,249,.90);
+  backdrop-filter: blur(16px);
+}
+.tab {
+  min-height: 42px;
+  padding: 7px 4px;
+  font-size: .72rem;
+}
+.tab.is-active {
+  color: #fff;
+  background: var(--teal);
+  border-color: var(--teal);
+  box-shadow: 0 8px 18px rgba(21,157,149,.22);
+}
 
-The view resets immediately and keeps its state, such as the selected model and context, clearing only the query text, so you can keep queuing up requests. Each started session appears in the sessions list once it commits.
+.content { display: grid; gap: 14px; }
+.panel { padding: 14px; }
+.panel__header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.panel h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.05;
+  letter-spacing: -.03em;
+}
+.panel p,
+.muted,
+.empty {
+  color: var(--muted);
+  margin: 5px 0 0;
+  font-size: .80rem;
+  line-height: 1.4;
+  font-weight: 750;
+}
 
-Sending a prompt with Enter still navigates into the new session as before.
+.metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.metric {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "label value"
+    "note value";
+  align-items: center;
+  column-gap: 12px;
+  min-width: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 12px;
+  overflow: hidden;
+}
+.metric span { grid-area: label; }
+.metric strong {
+  grid-area: value;
+  justify-self: end;
+  text-align: right;
+  font-size: 1.17rem;
+  line-height: 1.05;
+  letter-spacing: -.04em;
+  white-space: nowrap;
+}
+.metric em { grid-area: note; }
+.metric--good { background: #ecf8f2; border-color: #caedd9; }
+.metric--warn { background: #fff4ea; border-color: #ffd6b6; }
+.metric--blue { background: #edf6ff; border-color: #cfe4f7; }
 
-Navigate between sessions
-When you work across many agent sessions, being able to find and switch between them quickly matters. This release adds several keyboard-driven ways to move through your sessions, from a searchable picker to back and forward navigation and direct jumps by position.
+.chart {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: 190px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  margin-top: 8px;
+}
 
-Sessions picker: Press Ctrl+R (Windows+R on macOS) to open a Quick Pick that lists your sessions in two groups, recently opened and other sessions, with the active session pre-selected. Search across both the session title and its folder, then:
+.forecast-strip {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 10px 1px 2px;
+}
+.forecast-strip::-webkit-scrollbar { display: none; }
+.mini-card {
+  flex: 0 0 76px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  padding: 9px;
+  text-align: center;
+}
+.mini-card strong,
+.mini-card span,
+.mini-card em { display: block; }
+.mini-card strong { font-size: .78rem; }
+.mini-card span { margin-top: 5px; font-size: .92rem; font-weight: 950; }
+.mini-card em { margin-top: 3px; color: var(--muted); font-size: .72rem; font-style: normal; font-weight: 800; }
 
-Press Enter to open the selected session.
-Press unknown to open it to the side.
-Press RightArrow unknown to open it in the background while keeping the picker open.
-Screenshot showing the sessions picker Quick Pick with sessions grouped into recently opened and other sessions.
+.decision-list,
+.event-list,
+.species-list,
+.factor-list {
+  display: grid;
+  gap: 8px;
+}
+.decision-list > div,
+.event-list article,
+.species-list article,
+.factor-list article {
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: #fff;
+  padding: 12px;
+}
+.decision-list strong,
+.event-list strong,
+.species-list strong,
+.factor-list strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: .88rem;
+}
+.decision-list span,
+.event-list span,
+.species-list span,
+.factor-list span,
+.event-list em,
+.species-list em,
+.factor-list em {
+  color: var(--muted);
+  font-size: .78rem;
+  line-height: 1.35;
+  font-style: normal;
+  font-weight: 760;
+}
+.event-list article { display: grid; grid-template-columns: 1fr auto; gap: 4px 10px; align-items: center; }
+.event-list strong { grid-column: 1 / -1; }
+.event-list em { justify-self: end; }
+.event-list--accent article { border-color: #ccebd8; background: #eef9f3; }
+.event-list--danger article { border-color: #ffcaca; background: #fff2f2; }
 
-Go back and forward: Press Ctrl+Tab to go back and Ctrl+Shift+Tab to go forward through the sessions you have visited, in most-recently-visited order.
+.tide-hero,
+.moon-card,
+.score-hero {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: #fff;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.tide-gauge,
+.score-ring,
+.moon-visual {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+}
+.tide-gauge,
+.score-ring {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  background: conic-gradient(var(--teal) 0 var(--progress, 50%), #eaf1f4 var(--progress, 50%) 100%);
+  position: relative;
+}
+.tide-gauge::before,
+.score-ring::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border-radius: 50%;
+  background: #fff;
+}
+.tide-gauge span,
+.tide-gauge strong,
+.score-ring strong,
+.score-ring span { position: relative; z-index: 1; }
+.tide-gauge span { font-size: .66rem; color: var(--muted); font-weight: 900; }
+.tide-gauge strong { font-size: 1.15rem; }
+.tide-hero__copy p,
+.score-hero__copy p,
+.moon-card p { margin: 0 0 4px; color: var(--muted); font-size: .76rem; font-weight: 900; }
+.tide-hero__copy strong,
+.score-hero__copy strong,
+.moon-card strong { display: block; font-size: 1rem; line-height: 1.2; }
+.tide-hero__copy span,
+.score-hero__copy span,
+.moon-card span { display: block; margin-top: 5px; color: var(--muted); font-size: .78rem; line-height: 1.35; font-weight: 760; }
 
-Previous and Next session: The Go to Previous Session and Go to Next Session commands step through the visible sessions list in display order, respecting grouping, filtering, and collapsed sections, and clamp at the list edges. Use Alt+UpArrow / Alt+DownArrow (or Ctrl+PageUp / Ctrl+PageDown; Alt+Windows+LeftArrow / Alt+Windows+RightArrow on macOS).
+.moon-visual {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 68% 45%, #edf6fb 0 34%, #d8e5ec 35% 50%, transparent 51%),
+    radial-gradient(circle, #092949 0 64%, #0d3e68 65% 100%);
+  box-shadow: inset -7px 0 16px rgba(255,255,255,.16);
+}
+.score-ring { background: conic-gradient(var(--orange) calc(var(--score, 0) * 1%), #eaf1f4 0); }
+.score-ring strong { font-size: 1.55rem; color: var(--orange); }
+.score-ring span { margin-top: 24px; margin-left: -3px; color: var(--muted); font-size: .78rem; font-weight: 900; }
+.score-hero--green .score-ring { background: conic-gradient(var(--green) calc(var(--score, 0) * 1%), #eaf1f4 0); }
+.score-hero--green .score-ring strong { color: var(--green); }
+.score-hero--blue .score-ring { background: conic-gradient(var(--blue) calc(var(--score, 0) * 1%), #eaf1f4 0); }
+.score-hero--blue .score-ring strong { color: var(--blue); }
 
+.species-list article,
+.factor-list article {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 10px;
+  align-items: center;
+}
+.species-list meter {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: 12px;
+}
+.factor-list .bar {
+  grid-column: 1 / -1;
+  height: 10px;
+  border-radius: 999px;
+  background: #eaf1f4;
+  overflow: hidden;
+}
+.factor-list .bar i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--teal), var(--blue));
+}
 
-Focus a session by position: Press Ctrl+1 through Ctrl+9 (Windows+1 to Windows+9 on macOS) to focus the Nth visible session in the grid, left to right.
+.app-footer {
+  position: sticky;
+  bottom: calc(10px + env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 8px;
+  border: 1px solid rgba(220,233,238,.95);
+  border-radius: 999px;
+  background: rgba(255,255,255,.86);
+  box-shadow: 0 14px 34px rgba(7,43,66,.12);
+  backdrop-filter: blur(18px);
+}
+.footer-btn {
+  min-height: 44px;
+  color: var(--teal-dark);
+  background: #fff;
+  font-size: .82rem;
+}
 
+.modal {
+  width: min(calc(100% - 28px), 420px);
+  border: 0;
+  border-radius: 24px;
+  padding: 0;
+  box-shadow: 0 20px 70px rgba(3, 19, 35, .32);
+}
+.modal::backdrop { background: rgba(4,21,35,.38); backdrop-filter: blur(5px); }
+.modal__box { padding: 16px; }
+.modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.modal__header h2 { margin: 0; font-size: 1.15rem; }
+.field { display: grid; gap: 7px; margin-top: 12px; }
+.field span { color: var(--muted); font-size: .78rem; font-weight: 900; }
+.field input,
+.field select {
+  width: 100%;
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0 12px;
+  background: #fff;
+  color: var(--ink);
+}
+.field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px; }
+.primary-btn,
+.secondary-btn { min-height: 42px; padding: 0 14px; }
+.primary-btn { color: #fff; background: var(--teal); border-color: var(--teal); }
+.secondary-btn { color: var(--teal-dark); background: #f7fbfb; }
 
-Restore sessions on reload
-Reloading or reopening the Agents window no longer loses your layout. The previously visible sessions and their state are restored automatically, so you land back where you left off. This includes:
+@media (min-width: 520px) {
+  .app-shell { padding-top: 22px; }
+  .map-wrap { max-height: 390px; }
+  .metrics-grid { grid-template-columns: 1fr 1fr; }
+  .metric { min-height: 88px; align-content: center; }
+}
 
-The visible sessions grid: which sessions were open, their left-to-right order, the active session, and any sticky or pinned sessions.
-Per-session layout, including auxiliary bar visibility, the active view container, and the editors open in each session.
-Sessions list state, including the pinned and read status of each session.
-Close all sessions
-Similar to editor's Close All... commands, you can now close all your sessions in one step with the new Close All Sessions command. This is especially useful when you have many sessions open and want to quickly switch to a new session without having to close each session individually.
-
-Use the keyboard shortcut Ctrl+K Ctrl+W (Windows+K Windows+W on macOS) while a session has focus, or access the command from the Command Palette.
-
-Single-file diff in the Changes view (Preview)
-Setting: sessions.changes.openSingleFileDiff
-
-By default, selecting a file in the Changes view opens the multi-file diff editor. To open only the changes for that file, you had to press Alt and select the file (Open Changes).
-
-To always open a focused single-file diff editor when you select a file in the Changes view, enable sessions.changes.openSingleFileDiff. This lets you concentrate on one change at a time without the distraction of other files in the multi-file diff. When the setting is enabled, the redundant Open Changes inline action is hidden.
-
-Widen the editor with the side bar chevron
-When you open a file inside the Agents window, a chevron toggle now appears in the editor title bar, to the right of the tabs. Select it to collapse the secondary side bar (auxiliary bar) and widen the editor, and select it again to bring the side bar back. The chevron direction reflects the current side bar visibility.
-
-
-Autopilot (Preview)
-Autopilot is one of the chat permission levels that allows agents to take initiative and act autonomously, without needing explicit user approval for each action.
-
-Autopilot is enabled by default
-Settings:   chat.permissions.default ,   chat.tools.global.autoApprove
-
-Autopilot is now enabled by default in VS Code. Organizations can still control the visibility and usage of Autopilot via the   chat.tools.global.autoApprove setting.
-
-You can configure your default permission level for new chats with   chat.permissions.default . Change the current permission level at any time in the chat input box.
-
-Advanced Autopilot
-Setting:   chat.autopilot.advanced.enabled
-
-Knowing when an agent has truly finished a task is hard. Stop too early and the work is incomplete, loop too long and you waste time and tokens. Advanced Autopilot changes how Autopilot (Preview) decides when to keep iterating and when to finish, so you get more complete results without manually monitoring the loop.
-
-Instead of relying on fixed rules, a small utility model reads a transcript of the chat and decides whether the task is done. The objective that Autopilot works towards is surfaced in a tooltip above the chat, so you can always see what it is trying to accomplish. To keep things bounded, Autopilot loops a maximum of three times before it stops.
-
-Set   chat.autopilot.advanced.enabled to true to try this out.
-
-Editor Experience
-Create folder when opening folder from simple file dialog
-When you are opening a folder from the simple file dialog (  files.simpleDialog.enable ), you can now create a new folder directly from the dialog by typing the name of the folder you want to create and pressing Enter or selecting OK.
-
-Integrated Browser
-History
-Setting:   workbench.browser.maxHistoryEntries
-
-The integrated browser now retains the history of visited pages. History items are surfaced as suggestions when typing in the URL bar, and can be managed using Ctrl+H from within a browser tab. The maximum number of history items to remember can be adjusted via   workbench.browser.maxHistoryEntries .
-
-Screenshot showing the URL bar in the integrated browser, with an input of "Wiki" showing several Wikipedia pages from history.
-
-Improved toolbar customizability
-Previously, Add Element to Chat and Toggle Developer Tools were the only actions that could be made persistently visible in the right side of the browser toolbar.
-
-Now, all actions that appear within the overflow menu can also be surfaced persistently by right-clicking on the toolbar area to the right of the URL input:
-
-Screenshot showing the context menu allowing the user to toggle visible menu items.
-
-Faster agentic text entry
-Previously, typing text and pressing Enter required two separate tool calls. Now, the typeInPage tool supports a submit parameter to allow agents to type text and press Enter in one tool call.
-
-This reduces round-trips for common text-entry scenarios.
-
-Screenshot showing a tool call where the agent typed text into a page and pressed enter.
-
-Enterprise
-Enterprise-managed Copilot plugin policies (Experimental)
-VS Code now reads policy from the same configuration file that already drives enterprise plugin standards for Copilot CLI, so a single policy definition applies to both clients. In the future, VS Code and the CLI will align further on policy management from this shared source.
-
-Enterprise admins can now centrally control which chat plugins and plugin marketplaces are available to developers, instead of asking each developer to configure them locally.
-
-Introduced in 1.123, three new policy-backed settings can be configured through the Copilot enterprise settings file or via existing MDM solutions:
-
-  chat.plugins.enabledPlugins : an allowlist of plugin IDs that the organization explicitly enables or disables.
-chat.plugins.extraMarketplaces: additional plugin marketplaces the organization wants to make available.
-  chat.plugins.strictMarketplaces : when enabled, only marketplaces supplied by policy are trusted.
-Plugins that are blocked by policy remain visible but appear disabled. Marketplaces that are managed by policy are tagged as such in the marketplace picker.
-
-Deprecated features and settings
-None
-
-Thank you
-Contributions to our issue tracking:
-
-@gjsjohnmurray (John Murray)
-@RedCMD (RedCMD)
-@IllusionMH (Andrii Dieiev)
-@albertosantini (Alberto Santini)
-Contributions to vscode:
-
-@1Burhanuddin (Burhanuddin Mundrawala): fix: correct typo occured -> occurred in parcelWatcher.ts comment PR #319721
-@ajasad25 (Asad Meeran): Fix issue reporter "Preview on GitHub" opening repo root instead of the new-issue form PR #319577
-@gjsjohnmurray (John Murray)
-Improve messages about restart / reload after extension update (fix #297278) PR #307353
-Reinstate symbol icon colors in quickpicks (fix #299650) PR #299753
-@guomaggie: Switch from Copilot Proxy to CAPI PR #318443
-@ishaq2321 (Muhammad Ishaq Khan)
-debug: Log errors when loading stored breakpoints/watch expressions (#319805) PR #319806
-editor: Cache getComputedStyle result in shadowCaretRangeFromPoint (#319803) PR #319804
-@KirtiRamchandani (Kirtikumar Anandrao Ramchandani): fix: surface missing Git LFS git errors PR #319973
-@maruthang (Maruthan G): fix(explorer): guard file-explorer scroll handler against transient tree-map desync (#188365) PR #310833
-@mohanrajvenkatesan23-04 (Mohanraj Venkatesan): html-language-features: include JSDoc summary and tags in <script> hover PR #312585
-@mohityadav8 (Mohit Yadav): fix(docs): correct grammar and typo issues in documentation PR #317718
-@mutl3y: fix(terminal): catch ENOPRO in getCwdResource when file:// provider absent in VS Code web PR #317780
-@sgoedecke (Sean Goedecke): Fix auto mode fallback for empty model providers PR #316174
-@SimonSiefke (Simon Siefke)
-fix: process leaks in extensionHostConnection PR #319223
-fix: memory leak in pane composite bar PR #282589
-fix: memory leak in pty host service PR #287025
-@tbogoodnews (Taylor Blair): Fix BYOK response success turn telemetry PR #319637
-@vivekjm (Vivek JM): Disable Copy Breadcrumbs Path without symbols PR #318042
-@yogeshwaran-c (Yogeshwaran C): Remove disabled toggle from the tab order PR #319693
-Contributions to vscode-extension-samples:
-
-@fhwvtqdc2q-svg (Lloouujjiinn): Replace deprecated typescript.tsc.autoDetect setting PR #1287
-Contributions to vscode-pull-request-github:
-
-@Malix-Labs (Malix - Alix Brunet): feat: contributes.yamlValidation PR #8761
-We really appreciate people trying our new features as soon as they are ready, so check back here often and learn what's new.
-
-If you'd like to read release notes for previous VS Code versions, go to Updates on code.visualstudio.com.
-
+@media (max-width: 360px) {
+  .app-shell { padding-left: 10px; padding-right: 10px; }
+  .brand__icon { width: 42px; height: 42px; }
+  .zone-chip { font-size: .72rem; }
+  .tab { font-size: .66rem; }
+  .summary-grid { grid-template-columns: 1fr; }
+  .field-grid { grid-template-columns: 1fr; }
+}
