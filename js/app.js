@@ -669,19 +669,57 @@
   }
 
   function speciesForecast(zone, hour) {
-    return zone.species.map(name => {
+    const list = zone.species || [];
+    return list.map(name => {
       const rule = CONFIG.speciesRules[name];
-      let score = 48;
-      if (rule.zones.includes(zone.id)) score += 12;
+      if (!rule) return { name, score: 40, status: 'Sem regra', reason: 'Sem regra específica configurada.', tideReason: '' };
+
+      const monthIndex = new Date(hour.time).getMonth();
+      const season = Number(rule.season?.[monthIndex] ?? 10);
       const wave = hour.marine.waveHeight ?? 0;
-      if (wave >= rule.bestWave[0] && wave <= rule.bestWave[1]) score += 13;
-      if (hour.weather.windSpeed <= rule.bestWindMax) score += 10;
-      if (rule.bestLight && hour.lowLight) score += 12;
-      if (rule.bestTide.includes(hour.tide.phase)) score += 10;
-      if (name === 'Dourada' && hour.tide.phase === 'A subir') score += 8;
-      if (name === 'Robalo' && hour.lowLight) score += 10;
-      if (name === 'Sargo' && zone.id === 'atlantico' && wave >= 0.6) score += 8;
-      return { name, score: clamp(score, 0, 96), status: score >= 75 ? 'Boa hipótese' : score >= 60 ? 'Possível' : 'Fraco' };
+      const wind = hour.weather.windSpeed ?? 0;
+      const progress = hour.tide.progress ?? 0;
+      const tidePhaseOk = rule.bestTide.includes(hour.tide.phase);
+      const tideProgressOk = Array.isArray(rule.bestTideProgress) && rule.bestTideProgress.some(([min, max]) => progress >= min && progress <= max);
+      const waveOk = wave >= rule.bestWave[0] && wave <= rule.bestWave[1];
+      const windOk = wind <= rule.bestWindMax;
+      const lightOk = !rule.bestLight || hour.lowLight;
+      const zoneOk = rule.zones.includes(zone.id);
+
+      let score = 28;
+      score += zoneOk ? 14 : -18;
+      score += season;
+      score += tidePhaseOk ? 10 : -6;
+      score += tideProgressOk ? 8 : 0;
+      score += waveOk ? 10 : -6;
+      score += windOk ? 8 : -8;
+      score += lightOk ? 8 : -4;
+      if (hour.moon.phase.includes('cheia') || hour.moon.phase.includes('nova')) score += 3;
+      if (zone.id === 'ponta' && hour.tide.strength === 'Forte' && wind > zone.limits.windWarn) score -= 10;
+
+      score = clamp(Math.round(score), 5, 96);
+      const status = score >= 78 ? 'Boa hipótese' : score >= 63 ? 'Possível' : score >= 48 ? 'Fraca' : 'Pouco provável';
+      const seasonText = season >= 20 ? 'mês forte' : season >= 12 ? 'mês médio' : 'mês fraco';
+      const tideText = tidePhaseOk && tideProgressOk
+        ? `${hour.tide.phase.toLowerCase()} no ponto ideal`
+        : tidePhaseOk
+          ? `${hour.tide.phase.toLowerCase()} compatível`
+          : 'maré menos favorável';
+      const conditionBits = [];
+      conditionBits.push(seasonText);
+      conditionBits.push(tideText);
+      conditionBits.push(waveOk ? 'mar adequado' : 'mar fora do ideal');
+      if (rule.bestLight) conditionBits.push(hour.lowLight ? 'pouca luz favorável' : 'faltava pouca luz');
+
+      return {
+        name,
+        score,
+        status,
+        reason: conditionBits.join(' · '),
+        tideReason: rule.tideWhy,
+        zoneReason: rule.zoneWhy?.[zone.id] || zone.description,
+        monthReason: rule.monthWhy
+      };
     }).sort((a, b) => b.score - a.score);
   }
 
@@ -1142,8 +1180,8 @@
       ${section('Horas a evitar', 'Janelas penalizadas por vento, mar, corrente ou score baixo.', `
         <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${rangeLabel(w.start, w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
       `)}
-      ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
-        <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
+      ${section('Espécies prováveis', 'Probabilidade por espécie, ajustada ao mês, zona e fase da maré.', `
+        <div class="species-list species-list--rich">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status} · ${s.reason}</span><small>${s.zoneReason}. Maré: ${s.tideReason}. ${s.monthReason}.</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
       `)}
       ${section('Peso dos fatores', 'Como a app chegou ao score.', `
         <div class="factor-list">${factors.map(f => `<article><div><strong>${f.label}</strong><span>Peso ${f.weight}%</span></div><div class="bar"><i style="width:${f.value}%"></i></div><em>${Math.round(f.value)}/100</em></article>`).join('')}</div>
