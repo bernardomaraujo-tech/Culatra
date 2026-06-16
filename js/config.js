@@ -53,132 +53,52 @@ window.PESCA_CONFIG = {
   },
   speciesRules: {
     Robalo: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [22, 22, 22, 13, 13, 13, 13, 13, 22, 22, 22, 22],
-      bestWave: [0.3, 1.3],
-      bestWindMax: 24,
-      bestLight: true,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.45, 0.88], [0.05, 0.45]],
-      tideWhy: 'usa corrente e pouca luz para emboscar nas bordas de canal, bocas de esteiro, valas e cuts',
-      monthWhy: 'forte no outono/inverno; médio na primavera/verão',
-      zoneWhy: {
-        ria: 'na Ria rende em bordos de canal, bocas de esteiro e taludes com corrente',
-        atlantico: 'na costa procura valas e cortes de praia, sobretudo com pouca luz',
-        ponta: 'na Ponta beneficia da mistura de água e corrente, mas exige segurança'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.3, 1.3], bestWindMax: 24, bestLight: true, bestTide: ['A subir', 'A descer'],
+      strongMonths: [1, 2, 3, 9, 10, 11, 12], mediumMonths: [4, 5, 6, 7, 8],
+      tideText: 'última enchente e primeira vazante; usa a corrente para emboscar nas bordas de canal e nas valas',
+      placeText: 'na Ria rende em bordos de canal e bocas de esteiro; na costa procura valas, espuma e pouca luz'
     },
     Dourada: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [5, 5, 5, 13, 13, 13, 22, 22, 22, 22, 22, 13],
-      bestWave: [0.0, 0.9],
-      bestWindMax: 22,
-      bestLight: false,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.15, 0.75], [0.05, 0.35]],
-      tideWhy: 'sobe aos flats e fundos vivos na enchente e desce pelos corredores na vazante inicial',
-      monthWhy: 'mais forte no verão e outono; média em abr-jun e dezembro',
-      zoneWhy: {
-        ria: 'na Ria é forte em flats, canais e transições com alimentação',
-        atlantico: 'na costa rende em praias com concha, vala e água mais limpa',
-        ponta: 'na Ponta aparece ligada à entrada e saída de alimento e corrente'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.9], bestWindMax: 22, bestLight: false, bestTide: ['A subir'],
+      strongMonths: [7, 8, 9, 10, 11], mediumMonths: [4, 5, 6, 12],
+      tideText: 'enchente a correr e início de vazante; sobe aos flats para comer e desce pelos corredores',
+      placeText: 'na Ria procura flats, canais e fundos vivos; na costa prefere praia com concha, vala e água limpa'
     },
     Sargo: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [13, 13, 13, 13, 13, 13, 13, 13, 22, 22, 22, 22],
-      bestWave: [0.4, 1.5],
-      bestWindMax: 28,
-      bestLight: true,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.15, 0.80], [0.10, 0.65]],
-      tideWhy: 'circula melhor com água a correr, estrutura, espuma e alimento em suspensão',
-      monthWhy: 'mais forte no outono e inverno; possível todo o ano',
-      zoneWhy: {
-        ria: 'na Ria aparece em estrutura, bocas e zonas com corrente',
-        atlantico: 'na costa ganha valor com mar a mexer, vala, estrutura e pouca luz',
-        ponta: 'na Ponta beneficia de corrente organizada e mistura de fundos'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.5, 1.4], bestWindMax: 28, bestLight: true, bestTide: ['A subir', 'A descer'],
+      strongMonths: [9, 10, 11, 12], mediumMonths: [1, 2, 3, 4, 5, 6, 7, 8],
+      tideText: 'água a correr; na costa melhora com mar mexido, espuma e pouca luz',
+      placeText: 'procura estrutura, mistura de areia/concha, barras e valas com alimento em suspensão'
     },
     Corvina: {
-      zones: ['atlantico', 'ponta', 'ria'],
-      season: [5, 5, 5, 13, 13, 13, 22, 22, 22, 22, 22, 13],
-      bestWave: [0.2, 1.2],
-      bestWindMax: 24,
-      bestLight: true,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.10, 0.55], [0.05, 0.45]],
-      tideWhy: 'prefere água mais funda, noite e corrente organizada, sobretudo em vazante inicial ou enchente',
-      monthWhy: 'mais forte no verão e outono; média em abr-jun e dezembro',
-      zoneWhy: {
-        ria: 'na Ria é mais seletiva e ligada a canais fundos e influência de barras',
-        atlantico: 'na costa aparece melhor perto de influência de barras e água mais funda',
-        ponta: 'na Ponta faz sentido por mistura de barra, profundidade e corrente'
-      }
+      zones: ['atlantico', 'ponta'], bestWave: [0.3, 1.0], bestWindMax: 24, bestLight: true, bestTide: ['A subir', 'A descer'],
+      strongMonths: [7, 8, 9, 10, 11], mediumMonths: [4, 5, 6, 12],
+      tideText: 'vazante inicial e noites de enchente; prefere corrente organizada em água mais funda',
+      placeText: 'melhor em influência de barras, canais fundos, cortes e passagens de peixe'
     },
     Linguado: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [13, 13, 13, 13, 13, 13, 22, 22, 13, 13, 13, 13],
-      bestWave: [0.0, 0.8],
-      bestWindMax: 20,
-      bestLight: false,
-      bestTide: ['A subir'],
-      bestTideProgress: [[0.25, 0.85]],
-      tideWhy: 'prefere enchente e topo da maré em areais limpos e canais arenosos',
-      monthWhy: 'mais forte no verão; médio no resto do ano',
-      zoneWhy: {
-        ria: 'na Ria procura canais arenosos e transições de fundo limpo',
-        atlantico: 'na costa aparece em areais, valas calmas e transições de profundidade',
-        ponta: 'na Ponta é possível se houver areia limpa e mar controlado'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.8], bestWindMax: 20, bestLight: false, bestTide: ['A subir'],
+      strongMonths: [7, 8], mediumMonths: [1, 2, 3, 4, 5, 6, 9, 10, 11, 12],
+      tideText: 'enchente e topo da maré; aproveita areais limpos e transições areia/água',
+      placeText: 'mais provável em canais arenosos, praia com areia limpa e zonas de transição suave'
     },
     Choco: {
-      zones: ['ria'],
-      season: [13, 13, 13, 22, 22, 22, 22, 22, 13, 13, 13, 5],
-      bestWave: [0.0, 0.5],
-      bestWindMax: 22,
-      bestLight: true,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.45, 0.90], [0.05, 0.45]],
-      tideWhy: 'funciona com corrente moderada, muitas vezes do fim da enchente ao arranque da vazante',
-      monthWhy: 'destaca-se na primavera e início/verão dentro da Ria',
-      zoneWhy: {
-        ria: 'na Ria rende em bordos de ervas, fundo limpo e corrente moderada',
-        atlantico: 'na costa aberta é menos regular do que dentro da Ria',
-        ponta: 'na Ponta não é alvo principal face à lógica de costa'
-      }
+      zones: ['ria'], bestWave: [0.0, 0.5], bestWindMax: 22, bestLight: true, bestTide: ['A subir', 'A descer'],
+      strongMonths: [4, 5, 6, 7, 8], mediumMonths: [1, 2, 3, 9, 10, 11],
+      tideText: 'corrente moderada, muitas vezes do fim da enchente ao arranque da vazante',
+      placeText: 'mais lógico dentro da Ria, em bordos de ervas e fundo limpo, com trabalho junto ao fundo'
     },
     Lula: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [5, 5, 5, 13, 13, 13, 13, 13, 22, 22, 22, 13],
-      bestWave: [0.0, 0.7],
-      bestWindMax: 20,
-      bestLight: true,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.00, 0.25], [0.00, 0.25]],
-      tideWhy: 'melhora na estofa curta e início da corrida, ao fim da tarde/noite',
-      monthWhy: 'cresce de interesse do fim do verão ao outono',
-      zoneWhy: {
-        ria: 'na Ria é lógica em bordos de canal, zonas com luz e água controlável',
-        atlantico: 'na costa só ganha valor com mar arrumado, pouca rebentação e noite',
-        ponta: 'na Ponta pode aparecer em noites calmas com influência de barra'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.7], bestWindMax: 20, bestLight: true, bestTide: ['A subir', 'A descer'],
+      strongMonths: [9, 10, 11], mediumMonths: [4, 5, 6, 7, 8, 12],
+      tideText: 'estofa curta e início da corrida, sobretudo ao fim da tarde e de noite',
+      placeText: 'na Ria procura bordos de canal e zonas com luz; na costa só com mar arrumado e pouca rebentação'
     },
     Polvo: {
-      zones: ['ria', 'atlantico', 'ponta'],
-      season: [13, 13, 13, 13, 13, 13, 13, 13, 22, 22, 22, 22],
-      bestWave: [0.0, 0.9],
-      bestWindMax: 22,
-      bestLight: false,
-      bestTide: ['A subir', 'A descer'],
-      bestTideProgress: [[0.15, 0.75], [0.15, 0.75]],
-      tideWhy: 'prefere corrente fraca a moderada e evita extremos de turbulência',
-      monthWhy: 'mais interessante de outono a inverno; médio no resto do ano',
-      zoneWhy: {
-        ria: 'na Ria aparece em abrigos, taludes e fundos com estrutura',
-        atlantico: 'na costa é possível, mas menos regular a pé do que na Ria',
-        ponta: 'na Ponta tem lógica em fundos com abrigo e corrente controlada'
-      }
+      zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.9], bestWindMax: 20, bestLight: false, bestTide: ['A subir', 'A descer'],
+      strongMonths: [9, 10, 11, 12, 1, 2, 3], mediumMonths: [4, 5, 6, 7, 8],
+      tideText: 'corrente fraca a moderada; evita extremos de turbulência',
+      placeText: 'precisa de fundos com abrigo, taludes e estrutura; atenção a seletividade e enquadramento legal'
     }
   },
   fallback: {
