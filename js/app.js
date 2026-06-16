@@ -1357,6 +1357,11 @@
           <div><strong>Atenção</strong><span>${zone.avoidHint}</span></div>
         </div>
       `)}
+      ${section('Playlist', 'Música para acompanhar a leitura das condições e preparar a saída.', `
+        <div class="spotify-embed">
+          <iframe title="Playlist Spotify" data-testid="embed-iframe" src="https://open.spotify.com/embed/album/011dThtrT1jAIykIA4HEK5?utm_source=generator&theme=0&si=fde696700ea345f5" width="100%" height="352" frameborder="0" allowfullscreen allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+        </div>
+      `)}
     `;
   }
 
