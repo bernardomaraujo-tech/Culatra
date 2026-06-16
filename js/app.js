@@ -172,7 +172,7 @@
       latitude: zone.coords.lat,
       longitude: zone.coords.lon,
       timezone: CONFIG.timezone,
-      forecast_days: '7',
+      forecast_days: '8',
       wind_speed_unit: 'kmh',
       hourly: [
         'temperature_2m',
@@ -241,7 +241,7 @@
       key: state.worldTidesKey,
       extremes: 'true',
       heights: 'true',
-      length: String(7 * 24 * 60 * 60),
+      length: String(9 * 24 * 60 * 60),
       step: String(30 * 60)
     });
     const json = await fetchJson(`https://www.worldtides.info/api/v3?${params}`);
@@ -269,7 +269,7 @@
     const anchor = new Date('2026-06-15T15:05:00+01:00');
     const lowOffsetMs = (periodHighHours / 2) * 3600000;
     const start = new Date(Date.now() - 12 * 3600000);
-    const end = new Date(Date.now() + 7 * 24 * 3600000);
+    const end = new Date(Date.now() + 9 * 24 * 3600000);
     const extremes = [];
     let high = new Date(anchor);
     while (high > start) high = new Date(high.getTime() - periodHighHours * 3600000);
@@ -311,7 +311,7 @@
   function buildTideHeights(extremes, stepMinutes = 30) {
     if (!extremes.length) return [];
     const start = new Date(Date.now() - 6 * 3600000);
-    const end = new Date(Date.now() + 7 * 24 * 3600000);
+    const end = new Date(Date.now() + 9 * 24 * 3600000);
     const heights = [];
     for (let t = start.getTime(); t <= end.getTime(); t += stepMinutes * 60000) {
       heights.push({ time: new Date(t).toISOString(), height: tideHeightAt(extremes, t) });
@@ -522,7 +522,7 @@
       const activity = solunarDayActivity(periods, { ...data.tide, extremes: events.length ? events : data.tide.extremes });
       const moon = moonInfo(date);
       return `<tr>
-        <td><strong>${dayLabel(date)}</strong></td>
+        <td><strong>${dayOnlyLabel(date)}</strong></td>
         <td><span class="moon-mini">${moon.phase}</span><small>${moon.illumination}%</small></td>
         <td><span>☀️ ${daily.sunrise ? formatTime(daily.sunrise) : '--'}</span><small>🌙 ${daily.sunset ? formatTime(daily.sunset) : '--'}</small></td>
         <td>${tideEventCell(events[0])}</td>
@@ -651,7 +651,7 @@
   function fallbackDaily() {
     const out = [];
     const today = new Date();
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 8; i++) {
       const d = new Date(today.getFullYear(), today.getMonth(), today.getDate() + i);
       const ymd = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
       out.push({
@@ -1214,6 +1214,13 @@
     return `${day} ${weekday}`;
   }
 
+
+  function dayOnlyLabel(value) {
+    const date = value instanceof Date ? value : new Date(`${value}T12:00:00`);
+    if (!Number.isFinite(date.getTime())) return '--';
+    return date.toLocaleDateString('pt-PT', { day: '2-digit' });
+  }
+
   function daySkyIcon(summary) {
     if ((summary.rainMax || 0) >= 45) return '🌧️';
     if ((summary.cloudAvg || 0) >= 70) return '☁️';
@@ -1222,48 +1229,68 @@
   }
 
   function dailyWeatherSummaries(data, count = 7) {
-    const now = Date.now();
     const grouped = new Map();
-    (data.hourly || [])
-      .filter(h => h?.time && new Date(h.time).getTime() >= now - 3600000)
-      .forEach(h => {
-        const key = localDateKey(h.time);
-        if (!key) return;
-        if (!grouped.has(key)) grouped.set(key, []);
-        grouped.get(key).push(h);
-      });
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
 
-    return Array.from(grouped.entries())
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .slice(0, count)
-      .map(([dateKey, hours]) => {
-        const temps = hours.map(h => h.weather.temperature).filter(Number.isFinite);
-        const winds = hours.map(h => h.weather.windSpeed).filter(Number.isFinite);
-        const gusts = hours.map(h => h.weather.gusts).filter(Number.isFinite);
-        const rains = hours.map(h => h.weather.precipitationProbability).filter(Number.isFinite);
-        const clouds = hours.map(h => h.weather.cloudCover).filter(Number.isFinite);
-        const apparent = hours.map(h => h.weather.apparentTemperature).filter(Number.isFinite);
-        const directions = hours.map(h => h.weather.windDirection).filter(Number.isFinite);
-        const direction = meanDirection(directions);
-        const windAvg = round(mean(winds));
-        const gustMax = Math.max(...gusts, 0);
-        const rainMax = Math.max(...rains, 0);
-        const cloudAvg = round(mean(clouds));
-        const tempMin = round(Math.min(...temps), 1);
-        const tempMax = round(Math.max(...temps), 1);
-        const apparentMean = round(mean(apparent), 1);
-        const beach = beachDecision(data.zone, {
-          weather: {
-            temperature: mean(temps),
-            apparentTemperature: apparentMean || mean(temps),
-            windSpeed: windAvg,
-            gusts: gustMax,
-            precipitationProbability: rainMax,
-            cloudCover: cloudAvg
-          }
-        }, hours);
-        return { dateKey, hours, tempMin, tempMax, windAvg, gustMax, rainMax, cloudAvg, direction, directionText: dirText(direction), beach };
-      });
+    (data.hourly || []).forEach(h => {
+      if (!h?.time) return;
+      const key = localDateKey(h.time);
+      if (!key) return;
+      if (!grouped.has(key)) grouped.set(key, []);
+      grouped.get(key).push(h);
+    });
+
+    let dates = (data.daily || [])
+      .map(d => d.date)
+      .filter(Boolean)
+      .filter(dateKey => new Date(`${dateKey}T12:00:00`).getTime() >= startOfToday.getTime())
+      .slice(0, count);
+
+    if (dates.length < count) {
+      for (let i = 0; dates.length < count; i++) {
+        const d = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), startOfToday.getDate() + i);
+        const key = dateOnlyKey(d);
+        if (!dates.includes(key)) dates.push(key);
+      }
+    }
+
+    return dates.map(dateKey => {
+      let hours = (grouped.get(dateKey) || []).slice();
+      if (!hours.length) {
+        // Fallback simples para garantir que a tabela mostra sempre os 7 dias.
+        const previous = Array.from(grouped.values()).flat().slice(-24);
+        hours = previous.length ? previous : (data.hourly || []).slice(0, 24);
+      }
+
+      const temps = hours.map(h => h.weather.temperature).filter(Number.isFinite);
+      const winds = hours.map(h => h.weather.windSpeed).filter(Number.isFinite);
+      const gusts = hours.map(h => h.weather.gusts).filter(Number.isFinite);
+      const rains = hours.map(h => h.weather.precipitationProbability).filter(Number.isFinite);
+      const clouds = hours.map(h => h.weather.cloudCover).filter(Number.isFinite);
+      const apparent = hours.map(h => h.weather.apparentTemperature).filter(Number.isFinite);
+      const directions = hours.map(h => h.weather.windDirection).filter(Number.isFinite);
+      const direction = meanDirection(directions);
+      const windAvg = round(mean(winds));
+      const gustMax = Math.max(...gusts, 0);
+      const rainMax = Math.max(...rains, 0);
+      const cloudAvg = round(mean(clouds));
+      const tempMin = round(Math.min(...temps), 1);
+      const tempMax = round(Math.max(...temps), 1);
+      const apparentMean = round(mean(apparent), 1);
+      const beach = beachDecision(data.zone, {
+        weather: {
+          temperature: mean(temps),
+          apparentTemperature: apparentMean || mean(temps),
+          windSpeed: windAvg,
+          gusts: gustMax,
+          precipitationProbability: rainMax,
+          cloudCover: cloudAvg
+        }
+      }, hours);
+
+      return { dateKey, hours, tempMin, tempMax, windAvg, gustMax, rainMax, cloudAvg, direction, directionText: dirText(direction), beach };
+    });
   }
 
   function meanDirection(degrees) {
@@ -1282,7 +1309,7 @@
   function weatherDayRow(summary) {
     const toneClass = summary.beach.tone === 'good' ? 'good' : summary.beach.tone === 'blue' ? 'blue' : summary.beach.tone === 'warn' ? 'warn' : 'bad';
     return `<tr>
-      <td><strong>${dayLabel(summary.dateKey)}</strong></td>
+      <td><strong>${dayOnlyLabel(summary.dateKey)}</strong></td>
       <td class="sky-cell">${daySkyIcon(summary)}</td>
       <td>${summary.tempMin}° / ${summary.tempMax}°</td>
       <td>${summary.windAvg} km/h</td>
@@ -1454,7 +1481,7 @@
             <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
           </table>
         </div>
-        <p class="table-note">O coeficiente é um índice local estimado: cruza o marnel previsto, a referência local de marés mortas/vivas e a fase lunar. Com maré real ligada, as alturas reais têm prioridade.</p>
+        <p class="table-note">O coeficiente indica a força estimada da maré. A atividade resulta da combinação entre maré, lua, sol e períodos solunares.</p>
       `)}
       ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
         <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span><small>${s.detail}</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
