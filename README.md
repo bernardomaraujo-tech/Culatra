@@ -60,3 +60,7 @@ A secção Pesca usa:
 - maré, vento, mar, lua, luz e períodos solunares;
 - espécies prováveis por zona;
 - previsão de hoje + 7 dias com lua, sol, marés, coeficiente e atividade média.
+
+## Playlist
+
+A secção Pesca inclui uma playlist Spotify incorporada no final da página.
