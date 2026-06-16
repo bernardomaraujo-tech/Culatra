@@ -1183,3 +1183,19 @@ h1 {
 }
 .legend-box--major { background: #ffc928; }
 .legend-box--minor { background: #fff1b3; border: 1px solid #ffd65c; }
+
+
+.spotify-embed {
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: #111;
+  box-shadow: 0 10px 24px rgba(7,43,66,.08);
+}
+.spotify-embed iframe {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  border: 0;
+  border-radius: 18px;
+}
