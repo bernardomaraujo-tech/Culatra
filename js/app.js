@@ -26,10 +26,6 @@
     liveStatus: $('#liveStatus'),
     lastUpdated: $('#lastUpdated'),
     nextUpdate: $('#nextUpdate'),
-    summaryScore: $('#summaryScore'),
-    summaryStatus: $('#summaryStatus'),
-    summaryBest: $('#summaryBest'),
-    summaryReason: $('#summaryReason'),
     settingsBtn: $('#settingsBtn'),
     settingsDialog: $('#settingsDialog'),
     worldTidesKey: $('#worldTidesKey'),
@@ -936,14 +932,6 @@
 
   function updateHeader() {
     const data = currentData();
-    const zone = activeZone();
-    const cur = data.current;
-    const best = bestWindows(data, 65, 1)[0];
-    els.summaryScore.textContent = `${cur.score.value}/100`;
-    els.summaryStatus.textContent = cur.score.status;
-    els.summaryBest.textContent = best ? `${formatTime(best.start)} - ${formatTime(best.end)}` : 'Sem janela favorável';
-    els.summaryReason.textContent = best ? best.reason : zone.avoidHint;
-
     els.lastUpdated.textContent = state.lastUpdated ? `Atualizado ${formatDateTime(state.lastUpdated)}` : 'Dados iniciais';
     els.nextUpdate.textContent = state.nextRefreshAt ? `Auto: ${timeUntil(state.nextRefreshAt)}` : `Auto: ${state.refreshMinutes} min`;
 
@@ -983,6 +971,7 @@
     const zone = data.zone;
     const next24 = upcomingHours(data.hourly, 24);
     const next12 = upcomingHours(data.hourly, 12);
+    const next7Days = dailyWeatherSummaries(data, 7);
     const avgWind = round(mean(next24.map(h => h.weather.windSpeed)));
     const maxGust = Math.max(...next24.map(h => h.weather.gusts || 0));
     const temps = next24.map(h => h.weather.temperature).filter(Number.isFinite);
@@ -1032,6 +1021,28 @@
           </table>
         </div>
         <p class="table-note">A tabela começa sempre na hora atual e apresenta apenas as próximas horas.</p>
+      `)}
+      ${section('Previsão 7 dias', 'Resumo diário para planear praia e permanência na ilha.', `
+        <div class="table-scroll">
+          <table class="meteo-table meteo-table--daily" aria-label="Previsão meteorológica dos próximos 7 dias">
+            <thead>
+              <tr>
+                <th>Dia</th>
+                <th>Céu</th>
+                <th>Temp.</th>
+                <th>Vento</th>
+                <th>Dir.<small>vento</small></th>
+                <th>Rajadas</th>
+                <th>Chuva</th>
+                <th>Praia</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${next7Days.map(weatherDayRow).join('')}
+            </tbody>
+          </table>
+        </div>
+        <p class="table-note">A avaliação de praia considera temperatura, vento, rajadas, chuva e nebulosidade. Vento acima de brisa penaliza o conforto.</p>
       `)}
       ${section('Próximas 24 horas', 'Gráfico com temperatura e vento.', `
         <div class="chart-legend" aria-label="Legenda do gráfico">
@@ -1184,6 +1195,104 @@
   }
 
 
+
+  function localDateKey(dateOrIso) {
+    const date = dateOrIso instanceof Date ? dateOrIso : new Date(dateOrIso);
+    if (!Number.isFinite(date.getTime())) return '';
+    const y = date.toLocaleDateString('sv-SE', { timeZone: CONFIG.timezone });
+    return y;
+  }
+
+  function dayLabel(dateKey) {
+    const date = new Date(`${dateKey}T12:00:00`);
+    const today = localDateKey(new Date());
+    const tomorrow = localDateKey(new Date(Date.now() + 86400000));
+    const weekday = date.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '');
+    const day = date.toLocaleDateString('pt-PT', { day: '2-digit' });
+    if (dateKey === today) return `Hoje ${day}`;
+    if (dateKey === tomorrow) return `Amanhã ${day}`;
+    return `${day} ${weekday}`;
+  }
+
+  function daySkyIcon(summary) {
+    if ((summary.rainMax || 0) >= 45) return '🌧️';
+    if ((summary.cloudAvg || 0) >= 70) return '☁️';
+    if ((summary.cloudAvg || 0) >= 35) return '⛅';
+    return '☀️';
+  }
+
+  function dailyWeatherSummaries(data, count = 7) {
+    const now = Date.now();
+    const grouped = new Map();
+    (data.hourly || [])
+      .filter(h => h?.time && new Date(h.time).getTime() >= now - 3600000)
+      .forEach(h => {
+        const key = localDateKey(h.time);
+        if (!key) return;
+        if (!grouped.has(key)) grouped.set(key, []);
+        grouped.get(key).push(h);
+      });
+
+    return Array.from(grouped.entries())
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .slice(0, count)
+      .map(([dateKey, hours]) => {
+        const temps = hours.map(h => h.weather.temperature).filter(Number.isFinite);
+        const winds = hours.map(h => h.weather.windSpeed).filter(Number.isFinite);
+        const gusts = hours.map(h => h.weather.gusts).filter(Number.isFinite);
+        const rains = hours.map(h => h.weather.precipitationProbability).filter(Number.isFinite);
+        const clouds = hours.map(h => h.weather.cloudCover).filter(Number.isFinite);
+        const apparent = hours.map(h => h.weather.apparentTemperature).filter(Number.isFinite);
+        const directions = hours.map(h => h.weather.windDirection).filter(Number.isFinite);
+        const direction = meanDirection(directions);
+        const windAvg = round(mean(winds));
+        const gustMax = Math.max(...gusts, 0);
+        const rainMax = Math.max(...rains, 0);
+        const cloudAvg = round(mean(clouds));
+        const tempMin = round(Math.min(...temps), 1);
+        const tempMax = round(Math.max(...temps), 1);
+        const apparentMean = round(mean(apparent), 1);
+        const beach = beachDecision(data.zone, {
+          weather: {
+            temperature: mean(temps),
+            apparentTemperature: apparentMean || mean(temps),
+            windSpeed: windAvg,
+            gusts: gustMax,
+            precipitationProbability: rainMax,
+            cloudCover: cloudAvg
+          }
+        }, hours);
+        return { dateKey, hours, tempMin, tempMax, windAvg, gustMax, rainMax, cloudAvg, direction, directionText: dirText(direction), beach };
+      });
+  }
+
+  function meanDirection(degrees) {
+    const valid = degrees.filter(Number.isFinite);
+    if (!valid.length) return null;
+    const sum = valid.reduce((acc, deg) => {
+      const rad = deg * Math.PI / 180;
+      acc.x += Math.sin(rad);
+      acc.y += Math.cos(rad);
+      return acc;
+    }, { x: 0, y: 0 });
+    const angle = Math.atan2(sum.x / valid.length, sum.y / valid.length) * 180 / Math.PI;
+    return (angle + 360) % 360;
+  }
+
+  function weatherDayRow(summary) {
+    const toneClass = summary.beach.tone === 'good' ? 'good' : summary.beach.tone === 'blue' ? 'blue' : summary.beach.tone === 'warn' ? 'warn' : 'bad';
+    return `<tr>
+      <td><strong>${dayLabel(summary.dateKey)}</strong></td>
+      <td class="sky-cell">${daySkyIcon(summary)}</td>
+      <td>${summary.tempMin}° / ${summary.tempMax}°</td>
+      <td>${summary.windAvg} km/h</td>
+      <td><span class="dir-badge">${windArrowMarkup(summary.direction)}<b>${summary.directionText}</b></span></td>
+      <td>${summary.gustMax} km/h</td>
+      <td>${summary.rainMax}%</td>
+      <td><span class="beach-pill beach-pill--${toneClass}">${summary.beach.label}</span></td>
+    </tr>`;
+  }
+
   function weatherSkyIcon(h) {
     const rain = h.weather.precipitationProbability ?? 0;
     const cloud = h.weather.cloudCover ?? 0;
@@ -1272,8 +1381,6 @@
     const today = closestDaily(data.daily);
     const moon = moonInfo();
     const lowLightWindows = lowLightWindowsForDaily(data.daily).slice(0, 4);
-    const solunar = solunarPeriodsForDate(data.daily, new Date()).filter(p => p.end.getTime() > Date.now()).slice(0, 4);
-
     els.content.innerHTML = `
       ${section('Lua e luz', 'A lua é um fator secundário, mas ajuda a ler marés vivas, luz e atividade.', `
         <div class="moon-card">
@@ -1293,27 +1400,6 @@
       `)}
       ${section('Janelas com pouca luz', 'Períodos que tendem a favorecer várias espécies, sobretudo o robalo.', `
         <div class="event-list">${lowLightWindows.map(w => `<article><strong>${w.label}</strong><span>${formatDateTime(w.start)} - ${formatTime(w.end)}</span><em>${w.reason}</em></article>`).join('')}</div>
-      `)}
-      ${section('Períodos solunares', 'Estimativa local: períodos maiores seguem o trânsito lunar; menores seguem saída e pôr da lua.', `
-        ${solunarPeriodTable(solunarPeriodsForDate(data.daily, new Date()))}
-      `)}
-      ${section('Linha de atividade', 'Visualização do dia com períodos maiores, menores e momentos de sol.', `
-        ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
-      `)}
-      ${section('Calendário solunar e marés', 'Resumo de hoje + 7 dias com lua, sol, marés, coeficiente estimado e atividade média.', `
-        <div class="table-scroll">
-          <table class="tide-calendar-table" aria-label="Calendário solunar e marés">
-            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1.ª maré</th><th>2.ª maré</th><th>3.ª maré</th><th>4.ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
-            <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
-          </table>
-        </div>
-      `)}
-      ${section('Leitura para pesca', '', `
-        <div class="decision-list">
-          <div><strong>Regra prática</strong><span>Usar a lua como complemento: primeiro a maré, o mar, o vento e a luz.</span></div>
-          <div><strong>Quando ganha peso</strong><span>A lua nova ou cheia pode reforçar as marés vivas; é favorável para corrente, mas exige mais atenção na Ponta.</span></div>
-          <div><strong>Melhor combinação</strong><span>Maré a mexer + nascer/pôr do sol + vento controlado.</span></div>
-        </div>
       `)}
     `;
   }
