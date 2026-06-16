@@ -30,7 +30,7 @@ window.PESCA_CONFIG = {
       type: 'Praia aberta e mar oceânico',
       description: 'Face oceânica, mais influenciada pela ondulação, período, vento e segurança na praia.',
       bestHint: 'Meia maré, onda controlada e nascer ou pôr do sol.',
-      avoidHint: 'Evitar mar grande, shorebreak e vento forte de frente.',
+      avoidHint: 'Evitar mar grande, rebentação forte junto à praia e vento forte de frente.',
       species: ['Robalo', 'Dourada', 'Sargo', 'Corvina', 'Linguado', 'Lula', 'Polvo'],
       weights: { tide: 20, sea: 30, wind: 20, light: 15, water: 8, moon: 4, pressure: 3 },
       limits: { windWarn: 25, gustWarn: 35, waveWarn: 1.2, waveBlock: 1.6 }
@@ -61,8 +61,8 @@ window.PESCA_CONFIG = {
     Dourada: {
       zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.9], bestWindMax: 22, bestLight: false, bestTide: ['A subir'],
       strongMonths: [7, 8, 9, 10, 11], mediumMonths: [4, 5, 6, 12],
-      tideText: 'enchente a correr e início de vazante; sobe aos flats para comer e desce pelos corredores',
-      placeText: 'na Ria procura flats, canais e fundos vivos; na costa prefere praia com concha, vala e água limpa'
+      tideText: 'enchente a correr e início de vazante; sobe aos baixios para se alimentar e desce pelos corredores',
+      placeText: 'na Ria procura baixios, canais e fundos vivos; na costa prefere praia com concha, vala e água limpa'
     },
     Sargo: {
       zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.5, 1.4], bestWindMax: 28, bestLight: true, bestTide: ['A subir', 'A descer'],
@@ -92,7 +92,7 @@ window.PESCA_CONFIG = {
       zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.7], bestWindMax: 20, bestLight: true, bestTide: ['A subir', 'A descer'],
       strongMonths: [9, 10, 11], mediumMonths: [4, 5, 6, 7, 8, 12],
       tideText: 'estofa curta e início da corrida, sobretudo ao fim da tarde e de noite',
-      placeText: 'na Ria procura bordos de canal e zonas com luz; na costa só com mar arrumado e pouca rebentação'
+      placeText: 'na Ria procura bordos de canal e zonas com luz; na costa só com mar calmo e pouca rebentação'
     },
     Polvo: {
       zones: ['ria', 'atlantico', 'ponta'], bestWave: [0.0, 0.9], bestWindMax: 20, bestLight: false, bestTide: ['A subir', 'A descer'],
