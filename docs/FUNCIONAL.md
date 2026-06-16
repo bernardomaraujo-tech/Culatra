@@ -2,76 +2,77 @@
 
 ## Objetivo
 
-Criar uma página/app interativa para apoiar a decisão de ida à Ilha da Culatra, incluindo praia, meteorologia, marés, lua e pesca, considerando a diferença entre:
+Criar uma página/aplicação interativa para apoiar a decisão de ida à Ilha da Culatra, considerando praia, meteorologia, marés, lua e pesca.
 
-- Sul / Ria Formosa
-- Norte / Atlântico
+A aplicação distingue três zonas:
+
+- Sul / Atlântico
+- Norte / Ria Formosa
 - Ponta da Ilha
 
 ## Separadores
 
 ### 1. Meteorologia
 
-Mostra:
+Deve apresentar:
 
-- temperatura
-- sensação térmica
-- vento
-- direção do vento
-- rajadas
-- pressão atmosférica
-- humidade
-- probabilidade de chuva
-- gráfico de temperatura e vento
-- leitura funcional para pesca
+- temperatura;
+- sensação térmica;
+- vento;
+- direção do vento;
+- rajadas;
+- humidade;
+- pressão;
+- probabilidade de chuva;
+- quadro horário com céu, temperatura, vento, direção do vento, ondulação e período da vaga;
+- gráfico de temperatura e vento;
+- leitura funcional para praia, conforto, abrigo, exposição ao vento e risco de areia.
 
 ### 2. Marés
 
-Mostra:
+Deve apresentar:
 
-- fase da maré
-- altura atual estimada
-- baixa-mar
-- preia-mar
-- amplitude
-- força da corrente
-- onda
-- período
-- direção da ondulação
-- temperatura da água
-- gráfico de maré e ondulação
-- próximas marés
-- melhor fase e fase a evitar
+- fase da maré;
+- próxima baixa-mar e próxima preia-mar;
+- amplitude;
+- força da corrente;
+- ondulação;
+- período;
+- direção da ondulação;
+- temperatura da água;
+- gráfico de maré e ondulação;
+- próximas marés.
 
 ### 3. Lua
 
-Mostra:
+Deve apresentar:
 
-- fase da lua
-- luminosidade
-- idade lunar
-- nascer do sol
-- pôr do sol
-- janelas de pouca luz
-- leitura funcional da influência lunar
+- fase da lua;
+- luminosidade;
+- idade lunar;
+- nascer do sol;
+- pôr do sol;
+- janelas de pouca luz;
+- períodos solunares;
+- calendário solunar e de marés.
 
 ### 4. Pesca
 
-Mostra:
+Deve apresentar:
 
-- score de pesca
-- probabilidade estimada
-- melhores janelas horárias
-- horas a evitar
-- espécies prováveis
-- peso dos fatores
-- recomendação operacional
+- pontuação de pesca;
+- probabilidade estimada;
+- gráfico comparando pontuação de pesca e maré;
+- atividade solunar;
+- previsão de hoje + 7 dias;
+- espécies prováveis por zona;
+- recomendação prática.
 
-## Lógica de score
+## Lógica de pontuação
 
-O score é calculado por zona com pesos diferentes.
+A pontuação é calculada por zona com pesos diferentes.
 
-### Sul / Ria Formosa
+### Norte / Ria Formosa
 
 - Maré: 35%
 - Mar: 10%
@@ -81,7 +82,7 @@ O score é calculado por zona com pesos diferentes.
 - Lua: 5%
 - Pressão: 5%
 
-### Norte / Atlântico
+### Sul / Atlântico
 
 - Maré: 20%
 - Mar: 30%
@@ -105,7 +106,6 @@ O score é calculado por zona com pesos diferentes.
 
 - Open-Meteo Weather
 - Open-Meteo Marine
-- WorldTides opcional
-- IPMA para validação operacional
-- Instituto Hidrográfico para validação oficial de marés
-- DGRM e ICNF para regras e enquadramento
+- WorldTides, opcional
+- Instituto Hidrográfico, para validação oficial de marés
+- IPMA, para validação meteorológica e marítima
