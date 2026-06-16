@@ -1277,11 +1277,11 @@
       ${section('Linha de atividade', 'Visualização do dia com períodos maiores, menores e momentos de sol.', `
         ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
       `)}
-      ${section('Calendário solunar e marés', 'Resumo dos próximos dias com lua, sol, marés, coeficiente estimado e atividade média.', `
+      ${section('Calendário solunar e marés', 'Resumo de hoje + 7 dias com lua, sol, marés, coeficiente estimado e atividade média.', `
         <div class="table-scroll">
           <table class="tide-calendar-table" aria-label="Calendário solunar e marés">
             <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1ª maré</th><th>2ª maré</th><th>3ª maré</th><th>4ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
-            <tbody>${tideSolunarCalendarRows(data, 7)}</tbody>
+            <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
           </table>
         </div>
       `)}
@@ -1314,11 +1314,7 @@
     const data = currentData();
     const zone = data.zone;
     const cur = data.current;
-    const best = bestWindows(data, 65, 4);
-    const avoid = avoidWindows(data, 3);
     const species = speciesForecast(zone, cur);
-    const factors = Object.entries(cur.score.parts).map(([key, value]) => ({ key, label: factorLabel(key), value, weight: zone.weights[key] })).sort((a, b) => b.weight - a.weight);
-    const solunar = solunarPeriodsForDate(data.daily, new Date()).filter(p => p.end.getTime() > Date.now()).slice(0, 4);
     const solunarActivity = solunarDayActivity(solunarPeriodsForDate(data.daily, new Date()), data.tide);
 
     els.content.innerHTML = `
@@ -1342,19 +1338,21 @@
         ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
         <div class="decision-list"><div><strong>Como entra no score</strong><span>Períodos maiores reforçam mais a probabilidade; períodos menores dão um bónus menor. O efeito é combinado com maré, vento, mar e espécie.</span></div></div>
       `)}
-      ${section('Melhores horas', 'Janelas com score mais alto nas próximas 24 horas.', `
-        <div class="event-list event-list--accent">${best.length ? best.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem janela forte nas próximas 24 horas.</p>'}</div>
-      `)}
-      ${section('Horas a evitar', 'Janelas penalizadas por vento, mar, corrente ou score baixo.', `
-        <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
+      ${section('Previsão 8 dias', 'Tabela de apoio à decisão com hoje + 7 dias: lua, sol, marés, coeficiente e atividade média.', `
+        <div class="table-scroll">
+          <table class="tide-calendar-table" aria-label="Previsão de pesca para hoje e próximos sete dias">
+            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1ª maré</th><th>2ª maré</th><th>3ª maré</th><th>4ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
+            <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
+          </table>
+        </div>
+        <p class="table-note">Coeficiente e atividade são estimativas da app com base em maré, lua, sol e períodos solunares.</p>
       `)}
       ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
         <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span><small>${s.detail}</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
       `)}
-      ${section('Peso dos fatores', 'Como a app chegou ao score.', `
-        <div class="factor-list">${factors.map(f => `<article><div><strong>${f.label}</strong><span>Peso ${f.weight}%</span></div><div class="bar"><i style="width:${f.value}%"></i></div><em>${Math.round(f.value)}/100</em></article>`).join('')}</div>
+      ${section('Recomendação', '', `
         <div class="decision-list">
-          <div><strong>Recomendação</strong><span>${recommendationText(zone, cur)}</span></div>
+          <div><strong>Leitura prática</strong><span>${recommendationText(zone, cur)}</span></div>
           <div><strong>Zona</strong><span>${zone.bestHint}</span></div>
           <div><strong>Atenção</strong><span>${zone.avoidHint}</span></div>
         </div>
