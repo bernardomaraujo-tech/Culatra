@@ -3,7 +3,7 @@ window.PESCA_CONFIG = {
   defaultZone: 'ponta',
   defaultTab: 'meteorologia',
   refreshMinutes: 10,
-  horizonHours: 72,
+  horizonHours: 192,
   zones: {
     ria: {
       id: 'ria',
