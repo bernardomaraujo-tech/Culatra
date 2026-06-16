@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="theme-color" content="#0b5f73" />
-  <meta name="description" content="Previsão interativa para praia, meteorologia, marés, lua e pesca na Ilha da Culatra." />
+  <meta name="description" content="Previsão interativa para meteorologia, marés, lua, praia e pesca na Ilha da Culatra." />
   <title>Culatra Hoje</title>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="assets/icon.svg" type="image/svg+xml" />
@@ -43,7 +43,7 @@
       </div>
       <div class="summary-grid">
         <article class="summary-card summary-card--score">
-          <span>Score pesca</span>
+          <span>Pontuação pesca</span>
           <strong id="summaryScore">--</strong>
           <em id="summaryStatus">A calcular</em>
         </article>
@@ -76,9 +76,9 @@
         <h2>Fontes e atualização</h2>
         <button class="icon-btn" value="close" type="submit">×</button>
       </div>
-      <p class="muted">A app atualiza automaticamente e recalcula os scores. Sem chave de marés, usa estimativa local e permite ajuste manual.</p>
+      <p class="muted">A aplicação atualiza automaticamente e recalcula as pontuações. Sem chave de marés, usa uma estimativa local e permite ajuste manual.</p>
       <label class="field">
-        <span>WorldTides API key opcional</span>
+        <span>Chave API WorldTides opcional</span>
         <input id="worldTidesKey" type="password" placeholder="Opcional" autocomplete="off" />
       </label>
       <label class="field">
@@ -102,12 +102,12 @@
         <h2>Ajuste manual da maré</h2>
         <button class="icon-btn" value="close" type="submit">×</button>
       </div>
-      <p class="muted">Usa quando confirmares a tabela de marés oficial. A app recalcula maré, corrente, janelas e score de pesca.</p>
+      <p class="muted">Usa quando confirmares a tabela oficial de marés. A aplicação recalcula a maré, a corrente, as janelas e a pontuação de pesca.</p>
       <div class="field-grid">
         <label class="field"><span>Baixa-mar</span><input id="manualLow" type="time" /></label>
         <label class="field"><span>Preia-mar</span><input id="manualHigh" type="time" /></label>
-        <label class="field"><span>Altura baixa</span><input id="manualLowHeight" type="number" step="0.1" placeholder="0.7" /></label>
-        <label class="field"><span>Altura alta</span><input id="manualHighHeight" type="number" step="0.1" placeholder="3.3" /></label>
+        <label class="field"><span>Altura da baixa-mar</span><input id="manualLowHeight" type="number" step="0.1" placeholder="0.7" /></label>
+        <label class="field"><span>Altura da preia-mar</span><input id="manualHighHeight" type="number" step="0.1" placeholder="3.3" /></label>
       </div>
       <div class="modal__actions">
         <button id="clearManualTide" class="secondary-btn" value="default" type="button">Limpar ajuste</button>
