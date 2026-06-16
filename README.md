@@ -75,13 +75,8 @@ As rajadas também penalizam: acima de 23 km/h passa a moderado, acima de 29 km/
 - Norte / Ria Formosa
 - Ponta da Ilha
 
-## Atualização — lógica de espécies
 
-A secção **Pesca** foi atualizada para calcular as espécies prováveis por zona, mês do ano, fase da maré, luz, vento e estado do mar.
+## Atualização
 
-Regras principais:
-
-- **Norte / Ria Formosa** usa espécies e lógica interior da Ria: robalo, dourada, sargo, linguado, choco, lula e polvo.
-- **Sul / Atlântico** usa espécies e lógica de costa: robalo, dourada, sargo, corvina, linguado, lula e polvo.
-- **Ponta da Ilha** usa a lógica da costa, por ser zona de transição e influência oceânica.
-- Cada espécie mostra agora probabilidade, mês forte/médio/fraco, fase de maré e explicação curta do porquê.
+- A secção Pesca removeu as listas de melhores horas, horas a evitar e peso dos fatores.
+- Foi adicionada uma tabela de previsão de hoje + 7 dias com lua, sol, marés, coeficiente e atividade média.
