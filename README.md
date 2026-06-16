@@ -64,3 +64,8 @@ A secção Pesca usa:
 ## Playlist
 
 A secção Pesca inclui uma playlist Spotify incorporada no final da página.
+
+
+## Coeficiente de maré
+
+O coeficiente apresentado é um índice local estimado. Combina o marnel diário com a referência local da Ria Formosa/Culatra para marés mortas e vivas e aplica uma correção astronómica pela fase lunar. Quando existir fonte real de marés, as alturas reais têm prioridade sobre a estimativa.
