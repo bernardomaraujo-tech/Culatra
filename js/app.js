@@ -76,6 +76,28 @@
     return date.toLocaleString('pt-PT', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
   }
 
+
+  function dayStart(date = new Date()) {
+    return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  }
+
+  function minutesOfDay(dateOrIso) {
+    const d = dateOrIso instanceof Date ? dateOrIso : new Date(dateOrIso);
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  function dateAtMinutes(baseDate, minutes) {
+    const base = dayStart(baseDate);
+    return new Date(base.getTime() + minutes * 60000);
+  }
+
+  function parseTimeToMinutes(isoOrTime, fallback = 6 * 60) {
+    if (!isoOrTime) return fallback;
+    if (String(isoOrTime).includes('T')) return minutesOfDay(isoOrTime);
+    const [h, m] = String(isoOrTime).split(':').map(Number);
+    return Number.isFinite(h) ? h * 60 + (Number.isFinite(m) ? m : 0) : fallback;
+  }
+
   function clamp(n, min, max) {
     return Math.max(min, Math.min(max, n));
   }
@@ -362,6 +384,181 @@
     return Boolean((sr && Math.abs(t - sr) <= windowMs) || (ss && Math.abs(t - ss) <= windowMs));
   }
 
+
+
+  function solunarPeriodsForDate(daily, date = new Date()) {
+    const d = closestDaily(daily, date.getTime());
+    const moon = moonInfo(date);
+    const sunriseMin = parseTimeToMinutes(d.sunrise, 6 * 60 + 10);
+    const sunsetMin = parseTimeToMinutes(d.sunset, 20 * 60 + 50);
+    // Estimativa local: a lua nasce cerca de 50 min mais tarde a cada dia lunar.
+    const moonriseMin = (sunriseMin + moon.age * 50) % 1440;
+    const moonsetMin = moonriseMin + 12 * 60 + 25;
+    const upperTransit = moonriseMin + 6 * 60 + 12;
+    const lowerTransit = moonriseMin + 18 * 60 + 37;
+    const periods = [
+      { kind: 'major', label: 'Maior', startMin: lowerTransit - 60, endMin: lowerTransit + 60, reason: 'trânsito lunar oposto' },
+      { kind: 'major', label: 'Maior', startMin: upperTransit - 60, endMin: upperTransit + 60, reason: 'trânsito lunar' },
+      { kind: 'minor', label: 'Menor', startMin: moonriseMin, endMin: moonriseMin + 60, reason: 'saída da lua' },
+      { kind: 'minor', label: 'Menor', startMin: moonsetMin, endMin: moonsetMin + 60, reason: 'pôr da lua' }
+    ];
+    const lowLightRanges = [
+      [sunriseMin - 75, sunriseMin + 75],
+      [sunsetMin - 75, sunsetMin + 75]
+    ];
+    const spring = moon.phase.includes('cheia') || moon.phase.includes('nova');
+    return periods.map(p => {
+      const start = dateAtMinutes(date, p.startMin);
+      const end = dateAtMinutes(date, p.endMin);
+      const lowLightBoost = lowLightRanges.some(([a, b]) => p.startMin <= b && p.endMin >= a);
+      let activity = p.kind === 'major' ? 76 : 64;
+      if (spring) activity += 7;
+      if (lowLightBoost) activity += 9;
+      activity = clamp(activity, 0, 96);
+      const activityLabel = activity >= 85 ? 'atividade muito alta' : activity >= 72 ? 'atividade alta' : activity >= 58 ? 'atividade média' : 'atividade baixa';
+      return { ...p, start, end, activity, activityLabel, lowLightBoost, spring };
+    }).sort((a, b) => a.start - b.start);
+  }
+
+  function solunarStateAt(time, daily) {
+    const target = new Date(time).getTime();
+    const day = new Date(time);
+    const periods = [
+      ...solunarPeriodsForDate(daily, new Date(day.getTime() - 86400000)),
+      ...solunarPeriodsForDate(daily, day),
+      ...solunarPeriodsForDate(daily, new Date(day.getTime() + 86400000))
+    ];
+    const active = periods.find(p => target >= p.start.getTime() && target <= p.end.getTime());
+    if (active) return { active: true, kind: active.kind, label: active.label, reason: active.reason, activity: active.activity, activityLabel: active.activityLabel };
+    const next = periods.find(p => p.start.getTime() > target);
+    return { active: false, next };
+  }
+
+  function solunarDayActivity(periods, tide) {
+    const maxActivity = Math.max(...periods.map(p => p.activity), 0);
+    const tideBoost = tideState(tide).strength === 'Forte' ? 5 : tideState(tide).strength === 'Moderada' ? 2 : 0;
+    const value = clamp(Math.round(maxActivity + tideBoost), 0, 98);
+    const label = value >= 85 ? 'Muito alta' : value >= 72 ? 'Alta' : value >= 58 ? 'Média' : 'Baixa';
+    return { value, label };
+  }
+
+
+  function dateOnlyKey(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+
+  function dayLabel(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    const day = d.toLocaleDateString('pt-PT', { day: '2-digit' });
+    const week = d.toLocaleDateString('pt-PT', { weekday: 'short' }).replace('.', '');
+    return `${day} ${week}`;
+  }
+
+  function minutesOfDay(date) {
+    const d = date instanceof Date ? date : new Date(date);
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  function eventsForLocalDay(tide, date) {
+    const key = dateOnlyKey(date);
+    return (tide.extremes || [])
+      .filter(e => dateOnlyKey(e.time) === key)
+      .sort((a, b) => new Date(a.time) - new Date(b.time))
+      .slice(0, 4);
+  }
+
+  function tideCoefficientForEvents(events) {
+    const heights = events.map(e => Number(e.height)).filter(Number.isFinite);
+    if (heights.length < 2) return { value: '--', label: 'estimado' };
+    const amplitude = Math.max(...heights) - Math.min(...heights);
+    const value = clamp(Math.round(38 + amplitude * 17), 35, 98);
+    const label = value >= 85 ? 'muito alto' : value >= 70 ? 'alto' : value >= 50 ? 'médio' : 'baixo';
+    return { value, label };
+  }
+
+  function activityFishIcons(value) {
+    if (value >= 85) return '🐟🐟🐟';
+    if (value >= 72) return '🐟🐟';
+    if (value >= 58) return '🐟';
+    return '—';
+  }
+
+  function tideEventCell(event) {
+    if (!event) return '<span class="muted-cell">—</span>';
+    const icon = event.type === 'high' ? '▲' : '▼';
+    const cls = event.type === 'high' ? 'tide-up' : 'tide-down';
+    return `<span class="tide-event ${cls}"><b>${eventShortName(event.type)} ${formatTime(event.time)}</b><small>${icon} ${event.height} m</small></span>`;
+  }
+
+  function tideSolunarCalendarRows(data, days = 7) {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return Array.from({ length: days }, (_, i) => {
+      const date = new Date(today.getTime() + i * 86400000);
+      const daily = closestDaily(data.daily, date.getTime());
+      const events = eventsForLocalDay(data.tide, date);
+      const coef = tideCoefficientForEvents(events);
+      const periods = solunarPeriodsForDate(data.daily, date);
+      const activity = solunarDayActivity(periods, { ...data.tide, extremes: events.length ? events : data.tide.extremes });
+      const moon = moonInfo(date);
+      return `<tr>
+        <td><strong>${dayLabel(date)}</strong></td>
+        <td><span class="moon-mini">${moon.phase}</span><small>${moon.illumination}%</small></td>
+        <td><span>☀️ ${daily.sunrise ? formatTime(daily.sunrise) : '--'}</span><small>🌙 ${daily.sunset ? formatTime(daily.sunset) : '--'}</small></td>
+        <td>${tideEventCell(events[0])}</td>
+        <td>${tideEventCell(events[1])}</td>
+        <td>${tideEventCell(events[2])}</td>
+        <td>${tideEventCell(events[3])}</td>
+        <td><strong>${coef.value}</strong><small>${coef.label}</small></td>
+        <td><strong>${activity.label}</strong><small>${activityFishIcons(activity.value)}</small></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function solunarPeriodTable(periods) {
+    return `<div class="table-scroll table-scroll--compact">
+      <table class="solunar-table" aria-label="Períodos solunares do dia">
+        <thead><tr><th>Tipo</th><th>Hora</th><th>Atividade</th><th>Motivo</th></tr></thead>
+        <tbody>
+          ${periods.map(p => `<tr>
+            <td><strong>${p.kind === 'major' ? 'Maior' : 'Menor'}</strong></td>
+            <td>${formatTime(p.start)} - ${formatTime(p.end)}</td>
+            <td><span class="activity-pill activity-pill--${p.activity >= 85 ? 'high' : p.activity >= 72 ? 'good' : 'mid'}">${p.activityLabel}</span></td>
+            <td>${p.reason}${p.lowLightBoost ? '<small> + pouca luz</small>' : ''}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
+  function solunarTimeline(periods, daily, date = new Date()) {
+    const d = closestDaily(daily, date.getTime());
+    const markers = [];
+    if (d.sunrise) markers.push({ label: 'Nascer sol', icon: '☀️', min: minutesOfDay(d.sunrise), cls: 'sunrise' });
+    if (d.sunset) markers.push({ label: 'Pôr sol', icon: '🌅', min: minutesOfDay(d.sunset), cls: 'sunset' });
+    const blocks = [];
+    periods.forEach(p => {
+      let start = minutesOfDay(p.start);
+      let end = minutesOfDay(p.end);
+      const add = (a, b) => {
+        const left = clamp(a / 1440 * 100, 0, 100);
+        const width = clamp((b - a) / 1440 * 100, 0, 100 - left);
+        if (width > 0.5) blocks.push(`<span class="activity-block activity-block--${p.kind}" style="left:${left}%;width:${width}%" title="${p.label} ${formatTime(p.start)} - ${formatTime(p.end)}"><b>${p.kind === 'major' ? 'Maior' : 'Menor'}</b></span>`);
+      };
+      if (end >= start) add(start, end);
+      else { add(start, 1440); add(0, end); }
+    });
+    return `<div class="solunar-timeline" aria-label="Linha de atividade solunar">
+      <div class="timeline-hours"><span>00</span><span>06</span><span>12</span><span>18</span><span>24</span></div>
+      <div class="timeline-track">
+        ${blocks.join('')}
+        ${markers.map(m => `<i class="timeline-marker timeline-marker--${m.cls}" style="left:${clamp(m.min / 1440 * 100, 0, 100)}%" title="${m.label}">${m.icon}</i>`).join('')}
+      </div>
+      <div class="timeline-legend"><span><i class="legend-box legend-box--major"></i>Período maior</span><span><i class="legend-box legend-box--minor"></i>Período menor</span><span>☀️ nascer/pôr do sol</span></div>
+    </div>`;
+  }
+
   function combineHourly(weatherHourly, marineHourly, daily, tide) {
     const marineByTime = new Map(marineHourly.map(m => [m.time, m]));
     return weatherHourly.slice(0, CONFIG.horizonHours).map(w => {
@@ -369,12 +566,14 @@
       const target = new Date(w.time).getTime();
       const tideNow = tideState(tide, target);
       const moon = moonInfo(new Date(w.time));
+      const solunar = solunarStateAt(w.time, daily);
       return {
         time: w.time,
         weather: w,
         marine: m,
         tide: tideNow,
         moon,
+        solunar,
         lowLight: isLowLight(w.time, daily)
       };
     });
@@ -499,7 +698,8 @@
     const totalWeight = Object.values(w).reduce((a, b) => a + b, 0);
     const score = Math.round(Object.entries(parts).reduce((acc, [key, value]) => acc + value * (w[key] || 0), 0) / totalWeight);
     const status = score >= 75 ? 'Muito bom' : score >= 65 ? 'Bom' : score >= 52 ? 'Moderado' : score >= 40 ? 'Fraco' : 'Evitar';
-    const probability = clamp(Math.round(score * 0.92 + (hour.lowLight ? 5 : 0)), 5, 95);
+    const solunarBonus = hour.solunar?.active ? (hour.solunar.kind === 'major' ? 6 : 3) : 0;
+    const probability = clamp(Math.round(score * 0.92 + (hour.lowLight ? 5 : 0) + solunarBonus), 5, 95);
     return { value: score, status, probability, parts };
   }
 
@@ -539,11 +739,13 @@
 
   function scoreLight(zone, hour) {
     const h = new Date(hour.time).getHours();
-    if (hour.lowLight) return 96;
-    if (h >= 5 && h <= 8) return 80;
-    if (h >= 18 && h <= 21) return 80;
-    if (h >= 12 && h <= 16) return 48;
-    return 62;
+    let score = 62;
+    if (hour.lowLight) score = 96;
+    else if (h >= 5 && h <= 8) score = 80;
+    else if (h >= 18 && h <= 21) score = 80;
+    else if (h >= 12 && h <= 16) score = 48;
+    if (hour.solunar?.active) score = Math.max(score, hour.solunar.kind === 'major' ? 88 : 76);
+    return score;
   }
 
   function scoreWater(zone, hour) {
@@ -570,91 +772,50 @@
     return 62;
   }
 
-  function rangeLabel(start, end) {
-    const s = new Date(start);
-    const e = new Date(end);
-    if (!Number.isFinite(s.getTime()) || !Number.isFinite(e.getTime())) return '--';
-    const sameDay = s.toDateString() === e.toDateString();
-    return sameDay ? `${formatDateTime(s)} - ${formatTime(e)}` : `${formatDateTime(s)} - ${formatDateTime(e)}`;
-  }
-
   function bestWindows(data, minScore = 65, max = 3) {
-    const hours = upcomingHours(data.hourly || [], 24);
-    const windowSize = 3;
-    const candidates = [];
-
-    for (let i = 0; i <= hours.length - windowSize; i++) {
-      const group = hours.slice(i, i + windowSize);
-      const score = Math.round(mean(group.map(h => h.score.value)));
-      if (score < minScore) continue;
-      candidates.push({
-        index: i,
-        start: group[0].time,
-        end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
-        score,
-        reason: explainBestGroup(data.zone, group, data.tide.source)
-      });
-    }
-
-    const selected = [];
-    candidates
-      .sort((a, b) => b.score - a.score || new Date(a.start) - new Date(b.start))
-      .forEach(candidate => {
-        const overlaps = selected.some(item => Math.abs(item.index - candidate.index) < windowSize);
-        if (!overlaps && selected.length < max) selected.push(candidate);
-      });
-
-    return selected.sort((a, b) => new Date(a.start) - new Date(b.start));
-  }
-
-  function avoidWindows(data, max = 3) {
-    const hours = upcomingHours(data.hourly || [], 24);
-    const windowSize = 2;
-    const candidates = [];
-
-    for (let i = 0; i <= hours.length - windowSize; i++) {
-      const group = hours.slice(i, i + windowSize);
-      const risky = group.some(h => h.score.value < 45 || h.weather.windSpeed > data.zone.limits.windWarn || h.weather.gusts > data.zone.limits.gustWarn || h.marine.waveHeight > data.zone.limits.waveBlock);
-      if (!risky) continue;
-      candidates.push({
-        index: i,
+    const hours = upcomingHours(data.hourly || [], 48);
+    const groups = [];
+    let current = [];
+    hours.forEach(h => {
+      if (h.score.value >= minScore) current.push(h);
+      else if (current.length) { groups.push(current); current = []; }
+    });
+    if (current.length) groups.push(current);
+    return groups
+      .map(group => ({
         start: group[0].time,
         end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
         score: Math.round(mean(group.map(h => h.score.value))),
-        reason: explainAvoid(data.zone, group[Math.floor(group.length / 2)])
-      });
-    }
+        reason: explainBest(activeZone(), group[Math.floor(group.length / 2)])
+      }))
+      .sort((a, b) => b.score - a.score)
+      .slice(0, max);
+  }
 
-    const selected = [];
-    candidates
-      .sort((a, b) => a.score - b.score || new Date(a.start) - new Date(b.start))
-      .forEach(candidate => {
-        const overlaps = selected.some(item => Math.abs(item.index - candidate.index) < windowSize);
-        if (!overlaps && selected.length < max) selected.push(candidate);
-      });
-
-    return selected.sort((a, b) => new Date(a.start) - new Date(b.start));
+  function avoidWindows(data, max = 3) {
+    const groups = [];
+    let current = [];
+    upcomingHours(data.hourly, 48).forEach(h => {
+      const risky = h.score.value < 45 || h.weather.windSpeed > data.zone.limits.windWarn || h.weather.gusts > data.zone.limits.gustWarn || h.marine.waveHeight > data.zone.limits.waveBlock;
+      if (risky) current.push(h);
+      else if (current.length) { groups.push(current); current = []; }
+    });
+    if (current.length) groups.push(current);
+    return groups.map(group => ({
+      start: group[0].time,
+      end: new Date(new Date(group[group.length - 1].time).getTime() + 3600000).toISOString(),
+      score: Math.round(mean(group.map(h => h.score.value))),
+      reason: explainAvoid(data.zone, group[Math.floor(group.length / 2)])
+    })).slice(0, max);
   }
 
   function explainBest(zone, hour) {
-    return explainBestGroup(zone, [hour]);
-  }
-
-  function explainBestGroup(zone, group, tideSource = '') {
     const bits = [];
-    const phases = group.map(h => h.tide.phase).filter(Boolean);
-    const uniquePhases = Array.from(new Set(phases));
-    const avgWind = mean(group.map(h => h.weather.windSpeed || 0));
-    const maxWave = Math.max(...group.map(h => h.marine.waveHeight || 0));
-
-    const estimated = String(tideSource || '').toLowerCase().includes('estimativa');
-    if (uniquePhases.length === 1 && uniquePhases[0] === 'A subir') bits.push(estimated ? 'maré estimada a subir' : 'maré a subir');
-    else if (uniquePhases.length === 1 && uniquePhases[0] === 'A descer') bits.push(estimated ? 'maré estimada a descer' : 'maré a descer');
-    else bits.push(estimated ? 'maré estimada a mexer' : 'maré a mexer');
-
-    if (group.some(h => h.lowLight)) bits.push('pouca luz');
-    if (avgWind <= zone.limits.windWarn) bits.push('vento controlado');
-    if (maxWave <= zone.limits.waveWarn) bits.push('mar controlado');
+    if (hour.tide.phase === 'A subir') bits.push('maré a subir'); else bits.push('maré a mexer');
+    if (hour.lowLight) bits.push('pouca luz');
+    if (hour.solunar?.active) bits.push(hour.solunar.kind === 'major' ? 'período solunar maior' : 'período solunar menor');
+    if (hour.weather.windSpeed <= zone.limits.windWarn) bits.push('vento controlado');
+    if (hour.marine.waveHeight <= zone.limits.waveWarn) bits.push('mar controlado');
     return bits.slice(0, 3).join(' + ');
   }
 
@@ -669,57 +830,38 @@
   }
 
   function speciesForecast(zone, hour) {
-    const list = zone.species || [];
-    return list.map(name => {
+    const month = new Date(hour.time).getMonth() + 1;
+    return zone.species.map(name => {
       const rule = CONFIG.speciesRules[name];
-      if (!rule) return { name, score: 40, status: 'Sem regra', reason: 'Sem regra específica configurada.', tideReason: '' };
+      if (!rule) return { name, score: 30, status: 'Pouco provável', detail: 'sem regra definida' };
+      let score = 42;
+      const notes = [];
+      if (rule.zones.includes(zone.id)) { score += 14; notes.push('zona compatível'); }
+      else notes.push('zona menos favorável');
 
-      const monthIndex = new Date(hour.time).getMonth();
-      const season = Number(rule.season?.[monthIndex] ?? 10);
+      if (rule.strongMonths.includes(month)) { score += 18; notes.push('mês forte'); }
+      else if (rule.mediumMonths.includes(month)) { score += 9; notes.push('mês médio'); }
+      else { score -= 8; notes.push('mês fraco'); }
+
       const wave = hour.marine.waveHeight ?? 0;
-      const wind = hour.weather.windSpeed ?? 0;
-      const progress = hour.tide.progress ?? 0;
-      const tidePhaseOk = rule.bestTide.includes(hour.tide.phase);
-      const tideProgressOk = Array.isArray(rule.bestTideProgress) && rule.bestTideProgress.some(([min, max]) => progress >= min && progress <= max);
-      const waveOk = wave >= rule.bestWave[0] && wave <= rule.bestWave[1];
-      const windOk = wind <= rule.bestWindMax;
-      const lightOk = !rule.bestLight || hour.lowLight;
-      const zoneOk = rule.zones.includes(zone.id);
+      if (wave >= rule.bestWave[0] && wave <= rule.bestWave[1]) { score += 10; notes.push('mar compatível'); }
+      else if (wave > rule.bestWave[1]) score -= 8;
 
-      let score = 28;
-      score += zoneOk ? 14 : -18;
-      score += season;
-      score += tidePhaseOk ? 10 : -6;
-      score += tideProgressOk ? 8 : 0;
-      score += waveOk ? 10 : -6;
-      score += windOk ? 8 : -8;
-      score += lightOk ? 8 : -4;
-      if (hour.moon.phase.includes('cheia') || hour.moon.phase.includes('nova')) score += 3;
-      if (zone.id === 'ponta' && hour.tide.strength === 'Forte' && wind > zone.limits.windWarn) score -= 10;
+      if (hour.weather.windSpeed <= rule.bestWindMax) score += 7;
+      else score -= 7;
 
-      score = clamp(Math.round(score), 5, 96);
-      const status = score >= 78 ? 'Boa hipótese' : score >= 63 ? 'Possível' : score >= 48 ? 'Fraca' : 'Pouco provável';
-      const seasonText = season >= 20 ? 'mês forte' : season >= 12 ? 'mês médio' : 'mês fraco';
-      const tideText = tidePhaseOk && tideProgressOk
-        ? `${hour.tide.phase.toLowerCase()} no ponto ideal`
-        : tidePhaseOk
-          ? `${hour.tide.phase.toLowerCase()} compatível`
-          : 'maré menos favorável';
-      const conditionBits = [];
-      conditionBits.push(seasonText);
-      conditionBits.push(tideText);
-      conditionBits.push(waveOk ? 'mar adequado' : 'mar fora do ideal');
-      if (rule.bestLight) conditionBits.push(hour.lowLight ? 'pouca luz favorável' : 'faltava pouca luz');
+      if (rule.bestLight && hour.lowLight) { score += 10; notes.push('pouca luz'); }
+      if (hour.solunar?.active) { score += hour.solunar.kind === 'major' ? 8 : 4; notes.push(hour.solunar.kind === 'major' ? 'solunar maior' : 'solunar menor'); }
+      if (rule.bestTide.includes(hour.tide.phase)) { score += 10; notes.push('maré compatível'); }
 
-      return {
-        name,
-        score,
-        status,
-        reason: conditionBits.join(' · '),
-        tideReason: rule.tideWhy,
-        zoneReason: rule.zoneWhy?.[zone.id] || zone.description,
-        monthReason: rule.monthWhy
-      };
+      if (name === 'Dourada' && hour.tide.phase === 'A subir') score += 8;
+      if (name === 'Robalo' && hour.lowLight) score += 10;
+      if (name === 'Sargo' && zone.id === 'atlantico' && wave >= 0.6) score += 8;
+
+      const finalScore = clamp(Math.round(score), 0, 96);
+      const status = finalScore >= 78 ? 'Boa hipótese' : finalScore >= 62 ? 'Possível' : finalScore >= 48 ? 'Fraca' : 'Pouco provável';
+      const detail = `${notes.slice(0, 4).join(' · ')}. ${rule.tideText}. ${rule.placeText}.`;
+      return { name, score: finalScore, status, detail };
     }).sort((a, b) => b.score - a.score);
   }
 
@@ -1107,6 +1249,7 @@
     const today = closestDaily(data.daily);
     const moon = moonInfo();
     const lowLightWindows = lowLightWindowsForDaily(data.daily).slice(0, 4);
+    const solunar = solunarPeriodsForDate(data.daily, new Date()).filter(p => p.end.getTime() > Date.now()).slice(0, 4);
 
     els.content.innerHTML = `
       ${section('Lua e luz', 'A lua é um fator secundário, mas ajuda a ler marés vivas, luz e atividade.', `
@@ -1127,6 +1270,20 @@
       `)}
       ${section('Janelas com pouca luz', 'Períodos que tendem a favorecer várias espécies, sobretudo Robalo.', `
         <div class="event-list">${lowLightWindows.map(w => `<article><strong>${w.label}</strong><span>${formatDateTime(w.start)} - ${formatTime(w.end)}</span><em>${w.reason}</em></article>`).join('')}</div>
+      `)}
+      ${section('Períodos solunares', 'Estimativa local: períodos maiores seguem o trânsito lunar; menores seguem saída e pôr da lua.', `
+        ${solunarPeriodTable(solunarPeriodsForDate(data.daily, new Date()))}
+      `)}
+      ${section('Linha de atividade', 'Visualização do dia com períodos maiores, menores e momentos de sol.', `
+        ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
+      `)}
+      ${section('Calendário solunar e marés', 'Resumo dos próximos dias com lua, sol, marés, coeficiente estimado e atividade média.', `
+        <div class="table-scroll">
+          <table class="tide-calendar-table" aria-label="Calendário solunar e marés">
+            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1ª maré</th><th>2ª maré</th><th>3ª maré</th><th>4ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
+            <tbody>${tideSolunarCalendarRows(data, 7)}</tbody>
+          </table>
+        </div>
       `)}
       ${section('Leitura para pesca', '', `
         <div class="decision-list">
@@ -1161,6 +1318,8 @@
     const avoid = avoidWindows(data, 3);
     const species = speciesForecast(zone, cur);
     const factors = Object.entries(cur.score.parts).map(([key, value]) => ({ key, label: factorLabel(key), value, weight: zone.weights[key] })).sort((a, b) => b.weight - a.weight);
+    const solunar = solunarPeriodsForDate(data.daily, new Date()).filter(p => p.end.getTime() > Date.now()).slice(0, 4);
+    const solunarActivity = solunarDayActivity(solunarPeriodsForDate(data.daily, new Date()), data.tide);
 
     els.content.innerHTML = `
       ${section('Condições de pesca', `Decisão para ${zone.name}. Score recalculado para as próximas 24h com meteorologia, maré, mar, lua e luz.`, `
@@ -1172,16 +1331,25 @@
             <span>${explainBest(zone, cur)}</span>
           </div>
         </div>
+        <div class="chart-legend" aria-label="Legenda do gráfico de pesca">
+          <span><i class="legend-dot legend-dot--score"></i>Score / probabilidade</span>
+          <span><i class="legend-dot legend-dot--tide"></i>Maré (m)</span>
+        </div>
         <canvas id="scoreChart" class="chart" height="190"></canvas>
       `)}
+      ${section('Atividade solunar', `Atividade média do dia: ${solunarActivity.label} (${solunarActivity.value}/100).`, `
+        ${solunarPeriodTable(solunarPeriodsForDate(data.daily, new Date()))}
+        ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
+        <div class="decision-list"><div><strong>Como entra no score</strong><span>Períodos maiores reforçam mais a probabilidade; períodos menores dão um bónus menor. O efeito é combinado com maré, vento, mar e espécie.</span></div></div>
+      `)}
       ${section('Melhores horas', 'Janelas com score mais alto nas próximas 24 horas.', `
-        <div class="event-list event-list--accent">${best.length ? best.map(w => `<article><strong>${rangeLabel(w.start, w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem janela forte nas próximas 24 horas.</p>'}</div>
+        <div class="event-list event-list--accent">${best.length ? best.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem janela forte nas próximas 24 horas.</p>'}</div>
       `)}
       ${section('Horas a evitar', 'Janelas penalizadas por vento, mar, corrente ou score baixo.', `
-        <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${rangeLabel(w.start, w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
+        <div class="event-list event-list--danger">${avoid.length ? avoid.map(w => `<article><strong>${formatDateTime(w.start)} - ${formatTime(w.end)}</strong><span>Score médio ${w.score}/100</span><em>${w.reason}</em></article>`).join('') : '<p class="empty">Sem períodos críticos relevantes.</p>'}</div>
       `)}
-      ${section('Espécies prováveis', 'Probabilidade por espécie, ajustada ao mês, zona e fase da maré.', `
-        <div class="species-list species-list--rich">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status} · ${s.reason}</span><small>${s.zoneReason}. Maré: ${s.tideReason}. ${s.monthReason}.</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
+      ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
+        <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span><small>${s.detail}</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
       `)}
       ${section('Peso dos fatores', 'Como a app chegou ao score.', `
         <div class="factor-list">${factors.map(f => `<article><div><strong>${f.label}</strong><span>Peso ${f.weight}%</span></div><div class="bar"><i style="width:${f.value}%"></i></div><em>${Math.round(f.value)}/100</em></article>`).join('')}</div>
@@ -1222,8 +1390,17 @@
 
     const scoreCanvas = $('#scoreChart');
     if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 24), [
-      { key: h => h.score.value, label: 'Score' }
-    ], { suffix: '', min: 0, max: 100 });
+      { key: h => h.score.value, label: 'Score' },
+      { key: h => h.tide.height, label: 'Maré' }
+    ], {
+      suffix: '',
+      min: 0,
+      max: 100,
+      secondarySeries: [1],
+      secondarySuffix: 'm',
+      secondaryMin: 0,
+      secondaryMax: null
+    });
   }
 
 
@@ -1252,11 +1429,36 @@
     const w = rect.width;
     const h = rect.height;
     ctx.clearRect(0, 0, w, h);
-    const padL = 36, padR = 12, padT = 18, padB = 28;
-    const values = series.flatMap(s => rows.map(s.key)).filter(v => Number.isFinite(v));
-    const min = opts.min !== null && opts.min !== undefined ? opts.min : Math.floor(Math.min(...values) - 2);
-    const max = opts.max !== null && opts.max !== undefined ? opts.max : Math.ceil(Math.max(...values) + 2);
-    const span = max - min || 1;
+
+    const secondaryIdx = new Set(opts.secondarySeries || []);
+    const hasSecondary = secondaryIdx.size > 0;
+    const padL = 36;
+    const padR = hasSecondary ? 40 : 12;
+    const padT = 18;
+    const padB = 28;
+
+    const primarySeries = series.filter((_, i) => !secondaryIdx.has(i));
+    const secondarySeries = series.filter((_, i) => secondaryIdx.has(i));
+
+    const primaryValues = primarySeries.flatMap(s => rows.map(s.key)).filter(v => Number.isFinite(v));
+    const primaryMin = opts.min !== null && opts.min !== undefined ? opts.min : Math.floor(Math.min(...primaryValues) - 2);
+    const primaryMax = opts.max !== null && opts.max !== undefined ? opts.max : Math.ceil(Math.max(...primaryValues) + 2);
+    const primarySpan = primaryMax - primaryMin || 1;
+
+    const secondaryValues = secondarySeries.flatMap(s => rows.map(s.key)).filter(v => Number.isFinite(v));
+    const secondaryMin = hasSecondary
+      ? (opts.secondaryMin !== null && opts.secondaryMin !== undefined ? opts.secondaryMin : Math.floor(Math.min(...secondaryValues) * 10) / 10)
+      : 0;
+    const secondaryMax = hasSecondary
+      ? (opts.secondaryMax !== null && opts.secondaryMax !== undefined ? opts.secondaryMax : Math.ceil(Math.max(...secondaryValues) + 0.2))
+      : 1;
+    const secondarySpan = secondaryMax - secondaryMin || 1;
+
+    const yFor = (value, useSecondary = false) => {
+      const min = useSecondary ? secondaryMin : primaryMin;
+      const span = useSecondary ? secondarySpan : primarySpan;
+      return padT + (h - padT - padB) * (1 - ((value - min) / span));
+    };
 
     ctx.strokeStyle = '#dbe8ec';
     ctx.lineWidth = 1;
@@ -1273,32 +1475,47 @@
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     for (let i = 0; i <= 4; i++) {
-      const value = max - span * i / 4;
+      const value = primaryMax - primarySpan * i / 4;
       const y = padT + (h - padT - padB) * i / 4;
       ctx.fillText(`${Math.round(value)}${opts.suffix || ''}`, padL - 6, y);
     }
 
+    if (hasSecondary) {
+      ctx.textAlign = 'left';
+      for (let i = 0; i <= 4; i++) {
+        const value = secondaryMax - secondarySpan * i / 4;
+        const y = padT + (h - padT - padB) * i / 4;
+        ctx.fillText(`${value.toFixed(1)}${opts.secondarySuffix || ''}`, w - padR + 6, y);
+      }
+    }
+
     const colors = ['#14958f', '#f28421', '#2f6eaa'];
     series.forEach((s, si) => {
+      const useSecondary = secondaryIdx.has(si);
       ctx.strokeStyle = colors[si % colors.length];
-      ctx.lineWidth = 3;
+      ctx.lineWidth = useSecondary ? 2.5 : 3;
+      if (useSecondary) ctx.setLineDash([7, 5]);
+      else ctx.setLineDash([]);
       ctx.beginPath();
       rows.forEach((row, i) => {
+        const value = s.key(row);
         const x = padL + (w - padL - padR) * i / Math.max(1, rows.length - 1);
-        const y = padT + (h - padT - padB) * (1 - ((s.key(row) - min) / span));
+        const y = yFor(value, useSecondary);
         if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
       });
       ctx.stroke();
+      ctx.setLineDash([]);
     });
 
     if (Number.isInteger(opts.annotateExtremaSeries) && series[opts.annotateExtremaSeries]) {
       const seriesIndex = opts.annotateExtremaSeries;
       const getter = series[seriesIndex].key;
+      const useSecondary = secondaryIdx.has(seriesIndex);
       const extrema = findSeriesExtrema(rows, getter);
       ctx.font = '10px system-ui, sans-serif';
       extrema.forEach(item => {
         const x = padL + (w - padL - padR) * item.index / Math.max(1, rows.length - 1);
-        const y = padT + (h - padT - padB) * (1 - ((getter(rows[item.index]) - min) / span));
+        const y = yFor(getter(rows[item.index]), useSecondary);
         const label = `${item.type === 'peak' ? 'PM' : 'BM'} ${formatTime(item.time)}`;
         ctx.fillStyle = '#09233f';
         ctx.textAlign = 'center';
