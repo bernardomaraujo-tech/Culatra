@@ -399,7 +399,7 @@
     const periods = [
       { kind: 'major', label: 'Maior', startMin: lowerTransit - 60, endMin: lowerTransit + 60, reason: 'trânsito lunar oposto' },
       { kind: 'major', label: 'Maior', startMin: upperTransit - 60, endMin: upperTransit + 60, reason: 'trânsito lunar' },
-      { kind: 'minor', label: 'Menor', startMin: moonriseMin, endMin: moonriseMin + 60, reason: 'saída da lua' },
+      { kind: 'minor', label: 'Menor', startMin: moonriseMin, endMin: moonriseMin + 60, reason: 'nascer da lua' },
       { kind: 'minor', label: 'Menor', startMin: moonsetMin, endMin: moonsetMin + 60, reason: 'pôr da lua' }
     ];
     const lowLightRanges = [
@@ -535,8 +535,8 @@
   function solunarTimeline(periods, daily, date = new Date()) {
     const d = closestDaily(daily, date.getTime());
     const markers = [];
-    if (d.sunrise) markers.push({ label: 'Nascer sol', icon: '☀️', min: minutesOfDay(d.sunrise), cls: 'sunrise' });
-    if (d.sunset) markers.push({ label: 'Pôr sol', icon: '🌅', min: minutesOfDay(d.sunset), cls: 'sunset' });
+    if (d.sunrise) markers.push({ label: 'Nascer do sol', icon: '☀️', min: minutesOfDay(d.sunrise), cls: 'sunrise' });
+    if (d.sunset) markers.push({ label: 'Pôr do sol', icon: '🌅', min: minutesOfDay(d.sunset), cls: 'sunset' });
     const blocks = [];
     periods.forEach(p => {
       let start = minutesOfDay(p.start);
@@ -651,7 +651,7 @@
       source.push('Open-Meteo Weather');
     } catch (e) {
       weather = { hourly: fallbackHourly(zone), daily: fallbackDaily() };
-      source.push('Meteorologia fallback');
+      source.push('Meteorologia estimada');
     }
 
     try {
@@ -659,7 +659,7 @@
       source.push('Open-Meteo Marine');
     } catch (e) {
       marine = fallbackMarine(zone);
-      source.push('Mar fallback');
+      source.push('Mar estimado');
     }
 
     try {
@@ -825,7 +825,7 @@
     if (hour.weather.gusts > zone.limits.gustWarn) bits.push('rajadas elevadas');
     if (hour.marine.waveHeight > zone.limits.waveWarn) bits.push('onda acima do ideal');
     if (zone.id === 'ponta' && hour.tide.strength === 'Forte') bits.push('corrente forte');
-    if (!bits.length) bits.push('score baixo');
+    if (!bits.length) bits.push('pontuação baixa');
     return bits.join(' + ');
   }
 
@@ -839,9 +839,9 @@
       if (rule.zones.includes(zone.id)) { score += 14; notes.push('zona compatível'); }
       else notes.push('zona menos favorável');
 
-      if (rule.strongMonths.includes(month)) { score += 18; notes.push('mês forte'); }
+      if (rule.strongMonths.includes(month)) { score += 18; notes.push('mês favorável'); }
       else if (rule.mediumMonths.includes(month)) { score += 9; notes.push('mês médio'); }
-      else { score -= 8; notes.push('mês fraco'); }
+      else { score -= 8; notes.push('mês desfavorável'); }
 
       const wave = hour.marine.waveHeight ?? 0;
       if (wave >= rule.bestWave[0] && wave <= rule.bestWave[1]) { score += 10; notes.push('mar compatível'); }
@@ -883,7 +883,7 @@
       setupAutoRefresh();
     } catch (e) {
       console.error(e);
-      setStatus('Dados fallback', 'warn');
+      setStatus('Dados estimados', 'warn');
       state.lastUpdated = new Date();
       render();
     } finally {
@@ -918,7 +918,7 @@
     const best = bestWindows(data, 65, 1)[0];
     els.summaryScore.textContent = `${cur.score.value}/100`;
     els.summaryStatus.textContent = cur.score.status;
-    els.summaryBest.textContent = best ? `${formatTime(best.start)} - ${formatTime(best.end)}` : 'Sem janela forte';
+    els.summaryBest.textContent = best ? `${formatTime(best.start)} - ${formatTime(best.end)}` : 'Sem janela favorável';
     els.summaryReason.textContent = best ? best.reason : zone.avoidHint;
 
     els.lastUpdated.textContent = state.lastUpdated ? `Atualizado ${formatDateTime(state.lastUpdated)}` : 'Dados iniciais';
@@ -1042,8 +1042,8 @@
   function weatherDecision(zone, cur) {
     if (cur.weather.gusts > zone.limits.gustWarn) return 'Rajadas elevadas. Só avançar se o local estiver protegido.';
     if (cur.weather.windSpeed > zone.limits.windWarn) return 'Vento acima do ideal. Penaliza conforto e pesca.';
-    if (cur.weather.precipitationProbability > 45) return 'Possibilidade de chuva relevante. Preparar alternativa.';
-    return 'Condições meteorológicas utilizáveis para pesca casual.';
+    if (cur.weather.precipitationProbability > 45) return 'Possibilidade relevante de chuva. Preparar alternativa.';
+    return 'Condições meteorológicas utilizáveis para pesca recreativa.';
   }
 
   function beachDecision(zone, cur, next24) {
@@ -1103,7 +1103,7 @@
       : label === 'Bom'
         ? `Praia recomendável, mas manter atenção a rajadas. Risco de areia ${sandRisk}.`
         : label === 'Moderado'
-          ? `Praia possível, mas escolher zona abrigada. Vento já perceptível e risco de areia ${sandRisk}.`
+          ? `Praia possível, mas escolher zona abrigada. Vento já percetível e risco de areia ${sandRisk}.`
           : label === 'Mau'
             ? `Pouco recomendável para praia. Vento suficiente para levantar areia e tornar a permanência desconfortável.`
             : `Evitar praia exposta. Vento e rajadas demasiado fortes para conforto e segurança.`;
@@ -1195,7 +1195,7 @@
     const extremes = data.tide.extremes.filter(e => new Date(e.time).getTime() > Date.now()).slice(0, 6);
 
     els.content.innerHTML = `
-      ${section('Marés e mar', `Fonte: ${data.tide.source}. A maré influencia diretamente corrente, janelas e score.`, `
+      ${section('Marés e mar', `Fonte: ${data.tide.source}. A maré influencia diretamente a corrente, as janelas e a pontuação.`, `
         <div class="tide-hero">
           <div class="tide-gauge" style="--progress:${Math.round(tide.progress * 100)}%"><span>${tide.phase}</span><strong>${tide.height} m</strong></div>
           <div class="tide-hero__copy">
@@ -1223,7 +1223,7 @@
       ${section('Próximas marés', 'Eventos previstos ou estimados.', `
         <div class="event-list">${extremes.map(e => `<article><strong>${eventShortName(e.type)}</strong><span>${formatDateTime(e.time)}</span><em>${e.height} m</em></article>`).join('')}</div>
         <div class="decision-list">
-          <div><strong>Melhor fase</strong><span>${tide.phase === 'A subir' ? 'Maré a subir. Bom sinal para Ria e Dourada.' : 'Maré a descer. Pode funcionar em canais, pontas e zonas de corrente.'}</span></div>
+          <div><strong>Melhor fase</strong><span>${tide.phase === 'A subir' ? 'Maré a subir. Bom sinal para Ria e dourada.' : 'Maré a descer. Pode funcionar em canais, pontas e zonas de corrente.'}</span></div>
           <div><strong>Evitar</strong><span>${data.zone.avoidHint}</span></div>
         </div>
       `)}
@@ -1268,7 +1268,7 @@
           ${metric('Estado agora', cur.lowLight ? 'Pouca luz' : 'Luz normal', cur.lowLight ? 'janela boa' : 'menos relevante', cur.lowLight ? 'green' : '')}
         </div>
       `)}
-      ${section('Janelas com pouca luz', 'Períodos que tendem a favorecer várias espécies, sobretudo Robalo.', `
+      ${section('Janelas com pouca luz', 'Períodos que tendem a favorecer várias espécies, sobretudo o robalo.', `
         <div class="event-list">${lowLightWindows.map(w => `<article><strong>${w.label}</strong><span>${formatDateTime(w.start)} - ${formatTime(w.end)}</span><em>${w.reason}</em></article>`).join('')}</div>
       `)}
       ${section('Períodos solunares', 'Estimativa local: períodos maiores seguem o trânsito lunar; menores seguem saída e pôr da lua.', `
@@ -1280,15 +1280,15 @@
       ${section('Calendário solunar e marés', 'Resumo de hoje + 7 dias com lua, sol, marés, coeficiente estimado e atividade média.', `
         <div class="table-scroll">
           <table class="tide-calendar-table" aria-label="Calendário solunar e marés">
-            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1ª maré</th><th>2ª maré</th><th>3ª maré</th><th>4ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
+            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1.ª maré</th><th>2.ª maré</th><th>3.ª maré</th><th>4.ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
             <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
           </table>
         </div>
       `)}
       ${section('Leitura para pesca', '', `
         <div class="decision-list">
-          <div><strong>Regra prática</strong><span>Usar a lua como complemento: primeiro maré, mar, vento e luz.</span></div>
-          <div><strong>Quando ganha peso</strong><span>Lua nova ou cheia pode reforçar marés vivas; bom para corrente, mas exige mais atenção na Ponta.</span></div>
+          <div><strong>Regra prática</strong><span>Usar a lua como complemento: primeiro a maré, o mar, o vento e a luz.</span></div>
+          <div><strong>Quando ganha peso</strong><span>A lua nova ou cheia pode reforçar as marés vivas; é favorável para corrente, mas exige mais atenção na Ponta.</span></div>
           <div><strong>Melhor combinação</strong><span>Maré a mexer + nascer/pôr do sol + vento controlado.</span></div>
         </div>
       `)}
@@ -1318,7 +1318,7 @@
     const solunarActivity = solunarDayActivity(solunarPeriodsForDate(data.daily, new Date()), data.tide);
 
     els.content.innerHTML = `
-      ${section('Condições de pesca', `Decisão para ${zone.name}. Score recalculado para as próximas 24h com meteorologia, maré, mar, lua e luz.`, `
+      ${section('Condições de pesca', `Decisão para ${zone.name}. Pontuação recalculada para as próximas 24 h com meteorologia, maré, mar, lua e luz.`, `
         <div class="score-hero score-hero--${zone.color}">
           <div class="score-ring" style="--score:${cur.score.value}"><strong>${cur.score.value}</strong><span>/100</span></div>
           <div class="score-hero__copy">
@@ -1328,7 +1328,7 @@
           </div>
         </div>
         <div class="chart-legend" aria-label="Legenda do gráfico de pesca">
-          <span><i class="legend-dot legend-dot--score"></i>Score / probabilidade</span>
+          <span><i class="legend-dot legend-dot--score"></i>Pontuação / probabilidade</span>
           <span><i class="legend-dot legend-dot--tide"></i>Maré (m)</span>
         </div>
         <canvas id="scoreChart" class="chart" height="190"></canvas>
@@ -1336,16 +1336,16 @@
       ${section('Atividade solunar', `Atividade média do dia: ${solunarActivity.label} (${solunarActivity.value}/100).`, `
         ${solunarPeriodTable(solunarPeriodsForDate(data.daily, new Date()))}
         ${solunarTimeline(solunarPeriodsForDate(data.daily, new Date()), data.daily)}
-        <div class="decision-list"><div><strong>Como entra no score</strong><span>Períodos maiores reforçam mais a probabilidade; períodos menores dão um bónus menor. O efeito é combinado com maré, vento, mar e espécie.</span></div></div>
+        <div class="decision-list"><div><strong>Como entra na pontuação</strong><span>Períodos maiores reforçam mais a probabilidade; períodos menores dão um bónus menor. O efeito é combinado com maré, vento, mar e espécie.</span></div></div>
       `)}
       ${section('Previsão 8 dias', 'Tabela de apoio à decisão com hoje + 7 dias: lua, sol, marés, coeficiente e atividade média.', `
         <div class="table-scroll">
           <table class="tide-calendar-table" aria-label="Previsão de pesca para hoje e próximos sete dias">
-            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1ª maré</th><th>2ª maré</th><th>3ª maré</th><th>4ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
+            <thead><tr><th>Dia</th><th>Lua</th><th>Sol</th><th>1.ª maré</th><th>2.ª maré</th><th>3.ª maré</th><th>4.ª maré</th><th>Coef.</th><th>Ativ.</th></tr></thead>
             <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
           </table>
         </div>
-        <p class="table-note">Coeficiente e atividade são estimativas da app com base em maré, lua, sol e períodos solunares.</p>
+        <p class="table-note">O coeficiente e a atividade são estimativas da aplicação com base na maré, na lua, no sol e nos períodos solunares.</p>
       `)}
       ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
         <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span><small>${s.detail}</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
@@ -1365,7 +1365,7 @@
   }
 
   function recommendationText(zone, cur) {
-    if (cur.score.value >= 75) return 'Boa janela. Faz sentido planear saída, mantendo validação local.';
+    if (cur.score.value >= 75) return 'Boa janela. Faz sentido planear a saída, mantendo a validação no local.';
     if (cur.score.value >= 65) return 'Condições boas, mas confirma vento, corrente e segurança antes de avançar.';
     if (cur.score.value >= 52) return 'Possível, mas não é a janela mais forte. Melhor procurar horário alternativo.';
     return 'Não é recomendado como primeira escolha. Ver melhores janelas ou outra zona.';
@@ -1388,7 +1388,7 @@
 
     const scoreCanvas = $('#scoreChart');
     if (scoreCanvas) drawLineChart(scoreCanvas, upcomingHours(data.hourly, 24), [
-      { key: h => h.score.value, label: 'Score' },
+      { key: h => h.score.value, label: 'Pontuação' },
       { key: h => h.tide.height, label: 'Maré' }
     ], {
       suffix: '',
