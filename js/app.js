@@ -468,13 +468,36 @@
       .slice(0, 4);
   }
 
-  function tideCoefficientForEvents(events) {
+  function tideCoefficientForEvents(events, date = new Date(), source = '') {
     const heights = events.map(e => Number(e.height)).filter(Number.isFinite);
-    if (heights.length < 2) return { value: '--', label: 'estimado' };
-    const amplitude = Math.max(...heights) - Math.min(...heights);
-    const value = clamp(Math.round(38 + amplitude * 17), 35, 98);
-    const label = value >= 85 ? 'muito alto' : value >= 70 ? 'alto' : value >= 50 ? 'médio' : 'baixo';
-    return { value, label };
+    const range = heights.length >= 2 ? Math.max(...heights) - Math.min(...heights) : null;
+
+    // Índice local de maré inspirado no método SHOM: a força da maré é lida pelo marnel,
+    // ou seja, pela diferença entre preia-mar e baixa-mar consecutivas.
+    // Na Culatra/Ria Formosa usamos limites locais de referência documentados:
+    // marés mortas próximas de 1,3 m e marés vivas próximas de 3,5 m.
+    const localNeapRange = 1.3;
+    const localSpringRange = 3.5;
+    const rangeCoef = range === null
+      ? 70
+      : clamp(Math.round(20 + ((range - localNeapRange) / (localSpringRange - localNeapRange)) * 100), 20, 120);
+
+    // Proxy harmónico simplificado M2/S2: lua nova/cheia reforçam a amplitude;
+    // quartos reduzem-na. Isto replica a lógica spring-neap usada nas previsões
+    // harmónicas, sem depender de constituintes locais completos.
+    const moon = moonInfo(date);
+    const lunarCycle = 29.530588853;
+    const phaseAngle = (4 * Math.PI * moon.age) / lunarCycle;
+    const springness = (Math.cos(phaseAngle) + 1) / 2;
+    const lunarCoef = clamp(Math.round(20 + springness * 100), 20, 120);
+
+    const estimated = !source || source === 'Estimativa local' || source.toLowerCase().includes('estim');
+    const value = estimated
+      ? clamp(Math.round(rangeCoef * 0.45 + lunarCoef * 0.55), 20, 120)
+      : clamp(Math.round(rangeCoef * 0.85 + lunarCoef * 0.15), 20, 120);
+
+    const label = value >= 95 ? 'muito alto' : value >= 70 ? 'alto' : value >= 45 ? 'médio' : 'baixo';
+    return { value, label, range: range === null ? null : round(range, 1), lunar: lunarCoef };
   }
 
   function activityFishIcons(value) {
@@ -498,7 +521,7 @@
       const date = new Date(today.getTime() + i * 86400000);
       const daily = closestDaily(data.daily, date.getTime());
       const events = eventsForLocalDay(data.tide, date);
-      const coef = tideCoefficientForEvents(events);
+      const coef = tideCoefficientForEvents(events, date, data.tide.source);
       const periods = solunarPeriodsForDate(data.daily, date);
       const activity = solunarDayActivity(periods, { ...data.tide, extremes: events.length ? events : data.tide.extremes });
       const moon = moonInfo(date);
@@ -1345,7 +1368,7 @@
             <tbody>${tideSolunarCalendarRows(data, 8)}</tbody>
           </table>
         </div>
-        <p class="table-note">O coeficiente e a atividade são estimativas da aplicação com base na maré, na lua, no sol e nos períodos solunares.</p>
+        <p class="table-note">O coeficiente é um índice local estimado: cruza o marnel previsto, a referência local de marés mortas/vivas e a fase lunar. Com maré real ligada, as alturas reais têm prioridade.</p>
       `)}
       ${section('Espécies prováveis', 'Estimativa por espécie local e condições atuais.', `
         <div class="species-list">${species.map(s => `<article><div><strong>${s.name}</strong><span>${s.status}</span><small>${s.detail}</small></div><meter min="0" max="100" value="${s.score}"></meter><em>${s.score}%</em></article>`).join('')}</div>
