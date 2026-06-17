@@ -1070,6 +1070,16 @@
           <div><strong>Nota pesca</strong><span>${weatherDecision(zone, cur)}</span></div>
         </div>
       `)}
+      ${section('Câmara em direto', 'Imagem live da Praia da Ilha do Farol para validar céu, vento, ondulação e ocupação da praia.', `
+        <div class="camera-embed">
+          <iframe title="Câmara em direto da Ilha do Farol" src="https://webcams.windy.com/webcams/public/embed/player/1742819697/day" width="100%" height="260" frameborder="0" allowfullscreen loading="lazy"></iframe>
+        </div>
+        <div class="camera-actions">
+          <a href="https://www.windy.com/webcams/1742819697" target="_blank" rel="noopener noreferrer">Abrir no Windy</a>
+          <a href="https://beachcam.meo.pt/livecams/ilha-do-farol-culatra/" target="_blank" rel="noopener noreferrer">Abrir Beachcam/MEO</a>
+        </div>
+        <p class="table-note">Se o vídeo embebido não carregar no Safari, usa os botões para abrir a câmara diretamente.</p>
+      `)}
     `;
   }
 
