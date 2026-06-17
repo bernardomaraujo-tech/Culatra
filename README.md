@@ -80,4 +80,4 @@ O coeficiente apresentado é um índice local estimado. Combina o marnel diário
 
 ## Câmara em direto
 
-O separador Meteorologia inclui uma câmara em direto da Praia da Ilha do Farol/Culatra via Windy Webcams, com ligação alternativa para a Beachcam/MEO.
+O separador Meteorologia inclui a câmara em direto da Praia da Ilha do Farol/Culatra via Beachcam/MEO como fonte prioritária, com ligação alternativa para Windy caso o iframe seja bloqueado no navegador.
