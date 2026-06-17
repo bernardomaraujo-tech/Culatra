@@ -1222,3 +1222,12 @@ h1 {
   text-decoration: none;
   text-align: center;
 }
+
+.camera-embed--beachcam iframe {
+  min-height: 420px;
+}
+@media (max-width: 480px) {
+  .camera-embed--beachcam iframe {
+    min-height: 360px;
+  }
+}
