@@ -77,3 +77,7 @@ O coeficiente apresentado é um índice local estimado. Combina o marnel diário
 
 - Resumo superior de pesca removido do topo.
 - Separador Lua simplificado, sem tabelas de pesca/solunar.
+
+## Câmara em direto
+
+O separador Meteorologia inclui uma câmara em direto da Praia da Ilha do Farol/Culatra via Windy Webcams, com ligação alternativa para a Beachcam/MEO.
